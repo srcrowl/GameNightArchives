@@ -1,8 +1,46 @@
 import pandas as pd 
+import streamlit as st
+from shillelagh.backends.apsw.db import connect
+
+@st.cache(ttl = 600)
+def runQuery(sheets_link):
+	connection = connect(":memory:", adapters = 'gsheetsapi')
+	cursor = connection.cursor()
+	
+	query = f'SELECT * FROM "{sheets_link}"'
+
+	query_results = []
+	for row in cursor.execute(query):
+		query_results.append(row)
+	return query_results
+
+def loadData_sheets():
+	sheets_query = runQuery(st.secrets['sheets_url'])
+	results = pd.DataFrame(sheets_query, columns = ['Date', 'Semester', 'Game Title', 'Winner', 'Play Time (min)'])
+	return results
+
+def processData(data):
+	scores_dict = {}
+	gplayed_dict = {}
+	fraction_dict = {}
+	tmp_data = data.copy()
+	games_played = tmp_data.groupby('Game Title').size()
+	#games_played = games_played.rename({0:'Number of Plays'})
+	games_played = games_played.astype(int)
+	#explode dataframe to separate winners when there were multiple
+	tmp_data['Winner'] = tmp_data['Winner'].apply(lambda x: x.split(';'))
+	tmp_data = tmp_data.explode('Winner')
+	overall_scores = tmp_data.groupby(['Game Title', 'Winner']).size().reset_index()
+	overall_scores = overall_scores.pivot(columns = 'Winner', index = 'Game Title', values = 0)
+	#overall_scores = overall_scores.rename({0:'Number of Wins'}, axis = 1)
+	#overall_scores['Number of Wins'] = overall_scores['Number of Wins'].astype(int)
+	scores_dict['Game'] = overall_scores
+	gplayed_dict['Game'] = games_played
+	fraction_dict['Game'] = getFraction(overall_scores, games_played)
+	return scores_dict, gplayed_dict, fraction_dict
 
 
-
-def loadData():
+def loadData_local():
 	#load data
 	scores_dict = {}
 	gplayed_dict = {}
