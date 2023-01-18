@@ -1,5 +1,6 @@
 import pandas as pd 
-import dataLoader
+#import dataLoader
+from dataLoader import loadData_sheets, processData
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
@@ -7,13 +8,13 @@ import streamlit as st
 st.title('Game Night Statistics')
 
 #load data
-full_data = dataLoader.loadData_sheets()
-scores_dict, gplayed_dict, fraction_dict = dataLoader.processData(full_data)
+full_data = loadData_sheets()
+scores_dict, gplayed_dict, fraction_dict = processData(full_data)
 overall_fraction = scores_dict['Game'].sum()/gplayed_dict['Game'].sum()
 
 #load data minus the last 15 games
 past_data = full_data.iloc[0:-15]
-past_scores, past_gplayed, past_fraction = dataLoader.processData(past_data)
+past_scores, past_gplayed, past_fraction = processData(past_data)
 past_overall_fraction = past_scores['Game'].sum()/past_gplayed['Game'].sum()
 
 
