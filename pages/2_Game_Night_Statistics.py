@@ -9,7 +9,7 @@ st.title('Game Night Statistics')
 
 #load data
 full_data = loadData_sheets()
-scores_dict, gplayed_dict, fraction_dict = processData(full_data)
+scores_dict, gplayed_dict, fraction_dict = processData(st.session_state['Full Data'])
 overall_fraction = scores_dict['Game'].sum()/gplayed_dict['Game'].sum()
 
 #load data minus the last 15 games

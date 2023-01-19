@@ -16,7 +16,7 @@ def runQuery(sheets_link):
 
 def loadData_sheets():
 	sheets_query = runQuery(st.secrets['sheets_url'])
-	results = pd.DataFrame(sheets_query, columns = ['Date', 'Semester', 'Game Title', 'Winner', 'Play Time (min)'])
+	results = pd.DataFrame(sheets_query, columns = ['Date', 'Semester', 'Game Title', 'Winner', 'Play Time (min)', 'Scores', 'Game-specific Notes'])
 	return results
 
 def processData(data):
