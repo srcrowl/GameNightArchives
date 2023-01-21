@@ -1,12 +1,15 @@
 import streamlit as st
-from dataLoader import loadData_sheets
+from dataLoader import loadData_results, loadData_categories
 
 st.title('Naegle Lab Game Night: A Battle of Wills')
 
 st.write('Yes, yes, we are all here to complete are dissertation and get a doctorate. But of equal importance, who is the best board game player? Who can claim to place pieces the best? Have the most effective dice rool? Who can come up with a single word that indicates water but also a campfire? These questions and more get addressed once a week, and we have accumulated the results from the long battle here.')
 
 if 'Full Data' not in st.session_state:
-    st.session_state['Full Data'] = loadData_sheets()
+    st.session_state['Full Data'] = loadData_results()
+    
+if 'Type' not in st.session_state:
+    loadData_categories()
     
 number_of_games = st.session_state['Full Data'].shape[0]
 number_of_unique_games = st.session_state['Full Data']['Game Title'].nunique()

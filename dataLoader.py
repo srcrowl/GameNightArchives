@@ -14,90 +14,93 @@ def runQuery(sheets_link):
 		query_results.append(row)
 	return query_results
 
-def loadData_sheets():
-	sheets_query = runQuery(st.secrets['sheets_url'])
+def loadData_results():
+	sheets_query = runQuery(st.secrets['results_url'])
 	results = pd.DataFrame(sheets_query, columns = ['Date', 'Semester', 'Game Title', 'Winner', 'Play Time (min)', 'Scores', 'Game-specific Notes'])
 	return results
+	
+def processCategories(data, category_type = 'Game Type'):
+	data = data.dropna(subset = category_type)
+	data[category_type] = data[category_type].apply(lambda x: x.split(','))
+	data = data.explode(category_type)
+	data[category_type] = data[category_type].apply(lambda x: x.strip(' '))
+	return data
+	
+	
+def loadData_categories():
+	sheets_query = runQuery(st.secrets['category_url'])
+	results = pd.DataFrame(sheets_query, columns = ['Data of Entry', 'Game Title', 'Game Owner', 'Game Format', 'Game Type', 'Theme'])
+	
+	#establish owner dataframe
+	st.session_state['Owner'] = results[['Game Title', 'Game Owner']]
+	
+	#establish format dataframe
+	col = 'Game Format'
+	st.session_state['Format'] = processCategories(results[['Game Title', col]], col)
+	
+	#establish type dataframe
+	col = 'Game Type'
+	st.session_state['Type'] = processCategories(results[['Game Title', col]],col)
+	
+	#establish theme dataframe
+	col = 'Theme'
+	st.session_state[col] = processCategories(results[['Game Title', col]],col)
 
-def processData(data):
+def processResults(data, overall_only = False):
 	scores_dict = {}
 	gplayed_dict = {}
 	fraction_dict = {}
+	pae_dict = {}
 	tmp_data = data.copy()
 	games_played = tmp_data.groupby('Game Title').size()
-	#games_played = games_played.rename({0:'Number of Plays'})
 	games_played = games_played.astype(int)
+	games_played.name = 'Number of Plays'
 	#explode dataframe to separate winners when there were multiple
 	tmp_data['Winner'] = tmp_data['Winner'].apply(lambda x: x.split(';'))
 	tmp_data = tmp_data.explode('Winner')
 	overall_scores = tmp_data.groupby(['Game Title', 'Winner']).size().reset_index()
 	overall_scores = overall_scores.pivot(columns = 'Winner', index = 'Game Title', values = 0)
-	#overall_scores = overall_scores.rename({0:'Number of Wins'}, axis = 1)
-	#overall_scores['Number of Wins'] = overall_scores['Number of Wins'].astype(int)
+	
+	overall_fraction = overall_scores.sum()/games_played.sum()
+	#get game-specific results
 	scores_dict['Game'] = overall_scores
 	gplayed_dict['Game'] = games_played
 	fraction_dict['Game'] = getFraction(overall_scores, games_played)
-	return scores_dict, gplayed_dict, fraction_dict
-
-
-def loadData_local():
-	#load data
-	scores_dict = {}
-	gplayed_dict = {}
-	fraction_dict = {}
+	pae_dict['Game'] = getPercentageAboveExpected(fraction_dict['Game'], overall_fraction)
+	if not overall_only:
+		#get owner specific results
+		owner_scores = st.session_state['Owner'].merge(overall_scores, on = 'Game Title').groupby('Game Owner').sum()
+		owner_gplayed = st.session_state['Owner'].merge(games_played, left_on = 'Game Title', right_index = True).groupby('Game Owner').sum()['Number of Plays']
+		scores_dict['Owner'] = owner_scores
+		gplayed_dict['Owner'] = owner_gplayed
+		fraction_dict['Owner'] = getFraction(owner_scores, owner_gplayed)
+		pae_dict['Owner'] = getPercentageAboveExpected(fraction_dict['Owner'], overall_fraction)
+		
+		#get format specific results
+		format_scores = st.session_state['Format'].merge(overall_scores, on = 'Game Title').groupby('Game Format').sum()
+		format_gplayed = st.session_state['Format'].merge(games_played, left_on = 'Game Title', right_index = True).groupby('Game Format').sum()['Number of Plays']
+		scores_dict['Format'] = format_scores
+		gplayed_dict['Format'] = format_gplayed
+		fraction_dict['Format'] = getFraction(format_scores, format_gplayed)
+		pae_dict['Format'] = getPercentageAboveExpected(fraction_dict['Format'], overall_fraction)
+		
+		#get type specific results
+		type_scores = st.session_state['Type'].merge(overall_scores, on = 'Game Title').groupby('Game Type').sum()
+		type_gplayed = st.session_state['Type'].merge(games_played, left_on = 'Game Title', right_index = True).groupby('Game Type').sum()['Number of Plays']
+		scores_dict['Type'] = type_scores
+		gplayed_dict['Type'] = type_gplayed
+		fraction_dict['Type'] = getFraction(type_scores, type_gplayed)
+		pae_dict['Type'] = getPercentageAboveExpected(fraction_dict['Type'], overall_fraction)
+		
+		#get theme specific results
+		theme_scores = st.session_state['Theme'].merge(overall_scores, on = 'Game Title').groupby('Theme').sum()
+		theme_gplayed = st.session_state['Theme'].merge(games_played, left_on = 'Game Title', right_index = True).groupby('Theme').sum()['Number of Plays']
+		scores_dict['Theme'] = theme_scores
+		gplayed_dict['Theme'] = theme_gplayed
+		fraction_dict['Theme'] = getFraction(theme_scores, theme_gplayed)
+		pae_dict['Theme'] = getPercentageAboveExpected(fraction_dict['Theme'], overall_fraction)
 	
-	overall_scores = pd.read_csv('../OverallScore.csv',index_col = 0)
-	overall_scores = overall_scores.dropna(how = 'all')
-	overall_scores = overall_scores.dropna(how = 'all', axis = 1)
-	games_played = overall_scores['# of games played']
-	overall_scores = overall_scores.iloc[:,0:3]
-	overall_scores = overall_scores.fillna(value = 0)
-	overall_scores['Gabi'] = overall_scores['Gabi'].astype(int)
-	scores_dict['Game'] = overall_scores
-	gplayed_dict['Game'] = games_played
-	fraction_dict['Game'] = getFraction(overall_scores, games_played)
-
-	gameformat = pd.read_csv('../GameFormat.csv',index_col = 0, header = 1)
-	gameformat = gameformat.dropna(how = 'all')
-	gameformat = gameformat.dropna(how = 'all', axis = 1)
-	gameformat = gameformat.melt(ignore_index = False)
-	gameformat = gameformat.dropna(subset = 'value')
-	gameformat.drop('value', axis = 1, inplace = True)
-	format_scores = gameformat.merge(overall_scores, left_index = True, right_index = True)
-	format_gplayed = gameformat.merge(games_played, left_index = True, right_index = True)
-	format_scores = format_scores.groupby('variable').sum()
-	format_gplayed = format_gplayed.groupby('variable').sum()['# of games played']
-	scores_dict['Game Format'] = format_scores
-	gplayed_dict['Game Format'] = format_gplayed
-	fraction_dict['Game Format'] = getFraction(format_scores, format_gplayed)
-
-	gametype = pd.read_csv('../GameTypes.csv', header = 1, index_col = 0)
-	gametype = gametype.iloc[:,6:]
-	gametype = gametype.replace('X', 1)
-	gametype = gametype.melt(ignore_index = False)
-	gametype = gametype.dropna(subset = 'value')
-	gametype = gametype.drop('value', axis = 1)
-	type_scores = gametype.merge(overall_scores, left_index = True, right_index = True)
-	type_gplayed = gametype.merge(games_played, left_index = True, right_index = True)
-	type_scores = type_scores.groupby('variable').sum()
-	type_gplayed = type_gplayed.groupby('variable').sum()['# of games played']
-	scores_dict['Game Type'] = type_scores
-	gplayed_dict['Game Type'] = type_gplayed
-	fraction_dict['Game Type'] = getFraction(type_scores, type_gplayed)
-	
-	gameowner = pd.read_csv('../GameOwners.csv', header = 1, index_col = 0)
-	gameowner = gameowner.replace('X', 1)
-	gameowner = gameowner.melt(ignore_index = False, var_name = 'Owner')
-	gameowner = gameowner.dropna(subset = 'value')
-	gameowner = gameowner.drop('value', axis = 1)
-	owner_scores = gameowner.merge(overall_scores, left_index = True, right_index = True)
-	owner_gplayed = gameowner.merge(games_played, left_index = True, right_index = True)
-	owner_scores = owner_scores.groupby('Owner').sum()
-	owner_gplayed = owner_gplayed.groupby('Owner').sum()['# of games played']
-	scores_dict['Game Owner'] = owner_scores
-	gplayed_dict['Game Owner'] = owner_gplayed
-	fraction_dict['Game Owner'] = getFraction(owner_scores, owner_gplayed)
-	return scores_dict, gplayed_dict, fraction_dict
+	return scores_dict, gplayed_dict, fraction_dict, pae_dict
 	
 	
 def getFraction(scores, games_played):
@@ -106,7 +109,7 @@ def getFraction(scores, games_played):
 		fraction[col] = fraction[col]/games_played
 	return fraction
 	
-def getPercentageAboveExpected(fraction, games_played, overall_fraction):
+def getPercentageAboveExpected(fraction, overall_fraction):
 	pm = fraction.copy()
 	for col in pm.columns:
 		pm[col] = pm[col] - overall_fraction[col]

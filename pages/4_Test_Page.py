@@ -14,6 +14,6 @@ past_data = full_data.iloc[0:-15]
 past_scores, past_gplayed, past_fraction = dataLoader.processData(past_data)
 past_overall_fraction = past_scores['Game'].sum()/past_gplayed['Game'].sum()
 
-st.write(past_scores['Game'].sum()['Sam'])
+st.write(st.session_state['Full Data'])
 
 
