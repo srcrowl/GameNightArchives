@@ -16,7 +16,7 @@ def runQuery(sheets_link):
 
 def loadData_results():
 	sheets_query = runQuery(st.secrets['results_url'])
-	results = pd.DataFrame(sheets_query, columns = ['Date', 'Semester', 'Game Title', 'Winner', 'Play Time (min)', 'Scores', 'Game-specific Notes'])
+	results = pd.DataFrame(sheets_query, columns = ['Date', 'Semester', 'Game Title', 'Winner', 'Play Time (min)', 'Scores', 'Game-specific Notes', 'Location'])
 	return results
 	
 def processCategories(data, category_type = 'Game Type'):
@@ -45,6 +45,7 @@ def loadData_categories():
 	#establish theme dataframe
 	col = 'Theme'
 	st.session_state[col] = processCategories(results[['Game Title', col]],col)
+
 
 def processResults(data, overall_only = False):
 	scores_dict = {}
@@ -99,6 +100,15 @@ def processResults(data, overall_only = False):
 		gplayed_dict['Theme'] = theme_gplayed
 		fraction_dict['Theme'] = getFraction(theme_scores, theme_gplayed)
 		pae_dict['Theme'] = getPercentageAboveExpected(fraction_dict['Theme'], overall_fraction)
+		
+		#get location specific results
+		location_scores = tmp_data.groupby(['Winner', 'Location']).size().reset_index()
+		location_scores = location_scores.pivot(columns = 'Winner', index = 'Location', values = 0)
+		location_gplayed = data.groupby(['Location']).size()
+		scores_dict['Location'] = location_scores
+		gplayed_dict['Location'] = location_gplayed
+		fraction_dict['Location'] = getFraction(location_scores, location_gplayed)
+		pae_dict['Location'] = getPercentageAboveExpected(fraction_dict['Location'], overall_fraction)
 	
 	return scores_dict, gplayed_dict, fraction_dict, pae_dict
 	

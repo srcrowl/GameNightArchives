@@ -1,9 +1,12 @@
 import pandas as pd 
 #import dataLoader
 from dataLoader import processResults
+from game_plots import win_fraction_barplot, win_heatmap
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
 import streamlit as st
+
 
 st.title('Game Night Statistics')
 
@@ -34,59 +37,70 @@ col3.metric("Reagan", f"{round(overall_fraction['Reagan']*100,2)}%", f"{round((o
 
 
 
-#number of games played
-#st.header('Number of Games Won')
-#fig = plt.figure()
-#plt.bar(scores_dict['Game'].columns, scores_dict['Game'].sum())
-#plt.ylabel('Number of Games Won')
-#st.pyplot(fig)
-
-
-
 #Breaking Down By Games
 st.header('Breaking Down Win Percentage By Game')
 chart_type = st.selectbox('Chart Type:', ['Bar', 'Heatmap'])
-category = st.selectbox('Break down stats by:', ['Game','Format','Type', 'Owner', 'Theme'])
-if chart_type == 'Bar':
-	fraction = fraction_dict[category][['Sam', 'Gabi', 'Reagan']]
-	games_played = gplayed_dict[category]
-	if category == 'Game':
-		min_gplayed = st.slider('Minimum Number of Times Played', min_value = 0, max_value = 50, value = 0)
-		games_played = games_played[games_played >= min_gplayed]
-		fraction = fraction.loc[games_played.index]
-		
-	if chart_type == 'Bar':
-		fig, ax = plt.subplots(figsize = (10,6), nrows = 3, sharex = 'col', sharey = 'all')
-		for p in range(3):
-			name = fraction.columns[p]
-			ax[p].bar(fraction.index,fraction[name])
-			ax[p].axhline(overall_fraction[name], linestyle = 'dashed', color = 'red')
-			ax[p].set_ylabel('Win Fraction')
-			ax[p].set_ylim([0,1])
-			ticks = plt.xticks(rotation = 90)
-			ax[p].set_title(name)
-			for i in range(fraction.shape[0]):
-				index = fraction.index[i]
-				ax[p].annotate(int(games_played[index]), (i, fraction.loc[index,name]), ha = 'center')
-else:
-	if category == 'Game':
-		fig = plt.figure(figsize = (2,6))
-	else:
-		fig = plt.figure(figsize = (2,6))
-		
-	metric = st.radio('Metric:', ['Win Fraction', 'Fraction Above Expected'], horizontal = True)
-	if metric == 'Win Fraction':
-		fraction = fraction_dict[category][['Sam', 'Gabi', 'Reagan']]
-		cmap = 'Reds'
-		vmin = 0
-		vmax = 1
-		label = 'Win Fraction'
-	else:
-		fraction = pae_dict[category][['Sam','Gabi','Reagan']]
-		cmap = 'coolwarm'
-		vmin = -1
-		vmax = 1
-		label = 'Fraction Above Expected'
-	sns.heatmap(fraction, cmap = cmap, vmin = vmin, vmax = vmax, cbar_kws = {'label': label})
+category = st.selectbox('Break down stats by:', ['Game','Format','Type', 'Owner', 'Location','Theme'])
+fraction = fraction_dict[category][['Sam', 'Gabi', 'Reagan']]
+games_played = gplayed_dict[category]
 
+min_gplayed = st.slider('Minimum Number of Times Played', min_value = 0, max_value = 50, value = 0)
+games_played = games_played[games_played >= min_gplayed]
+fraction = fraction.loc[games_played.index]
+	
+if chart_type == 'Bar':
+	fig = win_fraction_barplot(fraction, overall_fraction, games_played)
+
+else:
+	metric = st.radio('Metric:', ['Win Fraction', 'Fraction Above Expected'], horizontal = True)
+	fig = win_heatmap(fraction_dict, pae_dict, category = category, metric = metric)
+
+st.pyplot(fig)
+
+
+
+#Tracking Progress Over Time
+st.header('Tracking Wins Over Time')
+st.write("We've been doing this for a while now, how have wins progressed over time?")
+
+#time = st.radio('Track time by:' , ['Date', 'Number of Games Played'], horizontal = True)
+track = st.radio('What do you want to track?', ['Number of Wins', 'Win Fraction', 'Number of Games', 'Time Spent Playing Games']) 
+
+
+legend = False
+@st.cache(ttl=300)
+def getCumulative(track = 'Number of Games'):
+    if track == 'Number of Games':
+        plot_data = st.session_state['Full Data'].groupby(['Date']).size().cumsum()
+        ylabel = 'Number of Games'
+        legend = False
+    elif track == 'Time Spent Playing Games':
+        plot_data = st.session_state['Full Data'].groupby(['Date']).sum().cumsum()/60
+        ylabel = 'Play Time (Hours)'
+        legend = False
+    elif track == 'Number of Wins':
+        plot_data = st.session_state['Full Data'].copy()
+        plot_data['Winner'] = plot_data['Winner'].apply(lambda x: x.split(';'))
+        plot_data = plot_data.explode('Winner')
+        plot_data['Wins'] = 1
+        plot_data = plot_data.groupby(['Winner', 'Date'])['Wins'].sum().reset_index()
+        plot_data = plot_data.pivot(columns = 'Winner', index = 'Date', values = 'Wins')
+        plot_data = plot_data.replace(np.nan, 0)
+        plot_data = plot_data.cumsum()
+        plot_data = plot_data[['Sam', 'Gabi', 'Reagan']]
+        legend = True
+        ylabel = 'Number of Wins'
+        
+    return plot_data, legend, ylabel
+    
+    
+plot_data, legend, ylabel = getCumulative(track)
+fig, ax = plt.subplots()
+if legend:
+    ax.plot(plot_data.index.values, plot_data.values, label = plot_data.columns)
+    ax.legend(bbox_to_anchor = (1.05, 1))
+else:
+    ax.plot(plot_data.index.values, plot_data.values)
+ax.set_ylabel(ylabel)
+plt.xticks(rotation = 45, ha = 'center')
 st.pyplot(fig)
