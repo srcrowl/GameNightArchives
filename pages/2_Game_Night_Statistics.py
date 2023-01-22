@@ -78,8 +78,11 @@ def getCumulative(track = 'Number of Games'):
         plot_data = st.session_state['Full Data'].groupby(['Date']).sum().cumsum()/60
         ylabel = 'Play Time (Hours)'
         legend = False
-    elif track == 'Number of Wins':
+    elif track == 'Number of Wins' or track == 'Win Fraction':
         plot_data = st.session_state['Full Data'].copy()
+        if track == 'Win Fraction':
+            gplayed_cumsum = plot_data.groupby('Date').size().cumsum()
+            
         plot_data['Winner'] = plot_data['Winner'].apply(lambda x: x.split(';'))
         plot_data = plot_data.explode('Winner')
         plot_data['Wins'] = 1
@@ -88,8 +91,13 @@ def getCumulative(track = 'Number of Games'):
         plot_data = plot_data.replace(np.nan, 0)
         plot_data = plot_data.cumsum()
         plot_data = plot_data[['Sam', 'Gabi', 'Reagan']]
-        legend = True
-        ylabel = 'Number of Wins'
+        if track == 'Number of Wins':
+            legend = True
+            ylabel = 'Number of Wins'
+        elif track == 'Win Fraction':
+            legend = True
+            ylabel = 'Win Fraction'
+            plot_data = (plot_data.T/gplayed_cumsum).T
         
     return plot_data, legend, ylabel
     
