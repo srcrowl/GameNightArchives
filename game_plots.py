@@ -21,20 +21,21 @@ def win_fraction_barplot(fraction_by_game, overall_fraction, games_played):
 	return fig
 	
 	
-def win_heatmap(fraction_dict, pae_dict, category = 'Game', metric = 'Win Fraction'):
+def win_heatmap(fraction_dict, pae_dict, games = None, category = 'Game', metric = 'Win Fraction'):
 	if category == 'Game':
 		fig = plt.figure(figsize = (2,6))
 	else:
 		fig = plt.figure(figsize = (2,6))
 		
 	if metric == 'Win Fraction':
-		fraction = fraction_dict[category][['Sam', 'Gabi', 'Reagan']]
+		fraction = fraction_dict[category].loc[games, ['Sam','Gabi','Reagan']]
 		cmap = 'Reds'
 		vmin = 0
 		vmax = 1
 		label = 'Win Fraction'
 	else:
-		fraction = pae_dict[category][['Sam','Gabi','Reagan']]
+
+		fraction = pae_dict[category].loc[games, ['Sam','Gabi','Reagan']]
 		cmap = 'coolwarm'
 		vmin = -1
 		vmax = 1
