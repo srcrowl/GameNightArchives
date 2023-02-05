@@ -42,7 +42,7 @@ col3.metric("Reagan", f"{round(overall_fraction['Reagan']*100,2)}%", f"{round((o
 #Breaking Down By Games
 st.header('Breaking Down Win Percentage By Game')
 chart_type = st.selectbox('Chart Type:', ['Bar', 'Heatmap'])
-category = st.selectbox('Break down stats by:', ['Game','Format','Type', 'Owner', 'Location','Theme'])
+category = st.selectbox('Break down stats by:', ['Game','Format','Type', 'Owner', 'Location','Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'])
 fraction = fraction_dict[category][['Sam', 'Gabi', 'Reagan']]
 games_played = gplayed_dict[category]
 

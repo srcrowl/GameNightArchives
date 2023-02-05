@@ -1,4 +1,6 @@
 import streamlit as st
+import seaborn as sns
+import matplotlib.pyplot as plt
 from dataLoader import loadData_results, loadData_categories
 
 st.title('Naegle Lab Game Night: A Battle of Wills')
@@ -51,8 +53,22 @@ for i in range(10):
 cols[1].write(rankings)
 
 
-#st.title('Naegle Lab Archives')
+st.subheader('Ratings of Games Played')
 
-#st.header('Welcome!')
+cols = st.columns(2)
 
-#st.write('We may be scientists and researchers, but we are far more concerned about who is winning game night and whether we created the best gingerbread house. Come for the phosphorylation puns, stay for the phosphorylaughs (oof). Come join the phosphotyroteam!')
+#bgg rating
+rating_fig = plt.figure()
+sns.histplot(data = st.session_state['Categories'], x = 'BGG Rating', kde = True, bins = 25, alpha = 0.5)
+plt.xlabel('')
+plt.ylabel('Number of Games', fontsize = 14)
+plt.title('Board Game Geek Rating (Out of 10)', fontsize = 18)
+cols[0].pyplot(rating_fig)
+
+#bgg complexity
+rating_fig = plt.figure()
+sns.histplot(data = st.session_state['Categories'], x = 'BGG Weight', kde = True, bins = 20, alpha = 0.5)
+plt.xlabel('')
+plt.ylabel('Number of Games', fontsize = 14)
+plt.title('Board Game Geek Complexity (Out of 5)', fontsize = 18)
+cols[1].pyplot(rating_fig)

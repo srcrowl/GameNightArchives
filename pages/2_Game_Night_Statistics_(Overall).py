@@ -40,7 +40,7 @@ col3.metric("Reagan", f"{round(overall_fraction['Reagan']*100,2)}%", f"{round((o
 #Breaking Down By Games
 st.header('Breaking Down Win Percentage By Game')
 chart_type = st.selectbox('Chart Type:', ['Bar', 'Heatmap'])
-category = st.selectbox('Break down stats by:', ['Game','Format','Type', 'Owner', 'Location','Theme'])
+category = st.selectbox('Break down stats by:', ['Game','Format','Type', 'Owner', 'Location','Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'])
 fraction = fraction_dict[category][['Sam', 'Gabi', 'Reagan']]
 games_played = gplayed_dict[category]
 
@@ -121,3 +121,19 @@ ax.set_ylabel(ylabel)
 plt.xticks(rotation = 45, ha = 'center')
 
 st.pyplot(fig)
+
+## get current dynasties
+
+st.header('Ongoing Dynasties')
+data = fraction_dict['Game'].copy()
+data = data.melt(ignore_index = False)
+data = data[data['value'] == 1].reset_index()
+data = data.groupby('Winner')['Game Title'].apply(list)
+data = data[['Sam', 'Gabi', 'Reagan']]
+cols = st.columns(3)
+for i in range(data.shape[0]):
+    player = data.index[i]
+    cols[i].header(player)
+    for game in data[player]:
+        cols[i].text(f"{game} ({gplayed_dict['Game'][game]})")
+        #st.text(f'{player}: {data[player]}')
