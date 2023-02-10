@@ -29,7 +29,7 @@ def processCategories(data, category_type = 'Game Type'):
 	
 def loadData_categories():
 	sheets_query = runQuery(st.secrets['category_url'])
-	results = pd.DataFrame(sheets_query, columns = ['Data of Entry', 'Game Title', 'Game Owner', 'Game Format', 'Game Type', 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism', 'BGG Rating', 'BGG Weight'])
+	results = pd.DataFrame(sheets_query, columns = ['Data of Entry', 'Game Title', 'Game Owner', 'Game Format', 'Game Type', 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism', 'BGG Rating', 'BGG Weight', "Sams Ratings", 'Gabis Ratings', 'Reagans Ratings'])
 	st.session_state['Categories'] = results.copy()
 	
 	#establish owner dataframe
