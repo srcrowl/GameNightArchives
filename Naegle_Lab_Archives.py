@@ -1,7 +1,7 @@
 import streamlit as st
 import seaborn as sns
 import matplotlib.pyplot as plt
-from dataLoader import loadData_results, loadData_categories
+from dataLoader import loadData_results, loadData_categories, loadData_ratings
 
 st.title('Naegle Lab Game Night: A Battle of Wills')
 
@@ -12,6 +12,9 @@ if 'Full Data' not in st.session_state:
     
 if 'Type' not in st.session_state:
     loadData_categories()
+    
+if 'Rating' not in st.session_state:
+    st.session_state['Ratings'] = loadData_ratings()
     
 number_of_games = st.session_state['Full Data'].shape[0]
 number_of_unique_games = st.session_state['Full Data']['Game Title'].nunique()
@@ -72,3 +75,29 @@ plt.xlabel('')
 plt.ylabel('Number of Games', fontsize = 14)
 plt.title('Board Game Geek Complexity (Out of 5)', fontsize = 18)
 cols[1].pyplot(rating_fig)
+
+cols = st.columns(3)
+#sam's rating
+rating_fig = plt.figure()
+sns.histplot(data = st.session_state['Ratings'], x = 'Sam', kde = True, binwidth = 1, alpha = 0.5, discrete = True)
+plt.xlabel('')
+plt.ylabel('Number of Games', fontsize = 14)
+plt.title("Sam's Ratings (Out of 10)", fontsize = 18)
+cols[0].pyplot(rating_fig)
+
+#gabi's rating
+rating_fig = plt.figure()
+sns.histplot(data = st.session_state['Ratings'], x = 'Gabi', kde = True, binwidth = 1, alpha = 0.5, discrete = True)
+plt.xlabel('')
+plt.ylabel('Number of Games', fontsize = 14)
+plt.title("Gabi's Ratings (Out of 10)", fontsize = 18)
+cols[1].pyplot(rating_fig)
+
+
+#gabi's rating
+rating_fig = plt.figure()
+sns.histplot(data = st.session_state['Ratings'], x = 'Reagan', kde = True, binwidth = 1, alpha = 0.5, discrete = True)
+plt.xlabel('')
+plt.ylabel('Number of Games', fontsize = 14)
+plt.title("Reagan's Ratings (Out of 10)", fontsize = 18)
+cols[2].pyplot(rating_fig)

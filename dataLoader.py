@@ -28,6 +28,7 @@ def processCategories(data, category_type = 'Game Type'):
 	
 	
 def loadData_categories():
+    #read in categories spreadsheet
 	sheets_query = runQuery(st.secrets['category_url'])
 	results = pd.DataFrame(sheets_query, columns = ['Data of Entry', 'Game Title', 'Game Owner', 'Game Format', 'Game Type', 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism', 'BGG Rating', 'BGG Weight', "Sams Ratings", 'Gabis Ratings', 'Reagans Ratings'])
 	st.session_state['Categories'] = results.copy()
@@ -59,6 +60,22 @@ def loadData_categories():
 	#establish BGG mechanism dataframe
 	col = 'BGG Mechanism'
 	st.session_state[col] = processCategories(results[['Game Title', col]],col)
+
+
+def loadData_ratings():
+    #read in ratings
+    sheets_query = runQuery(st.secrets['ratings_url'])
+    columns = ['Date of Entry', 'Name','Rummikub', 'Trial by Trolley','Sequence', 'Galaxy Trucker', 'Rat-a-tat Cat', 'Quacks of Quedlinberg', 'Uno', 'Phase 10', 'Goat Lords', 'Taboo', 'Qwixx', 'Smart Ass', 'Anomia', 'Spades', 'President', 'ERS', 'Love Letter', 'Codenames', 'Peptide', 'Hangry', "That's Pretty Clever", '5 Second Rule', 'Exploding Kittens', 'Llamas Unleashed', 'Carcassonne', 'Uno Flip', 'Bananagrams', 'Betrayal at the House on the Hill', 'Blokus', 'Azul', 'Calico', 'Unearth', 'Hearts', 'Dominion', 'Happy Little Dinosaurs', 'Balderdash', 'Pictionary', 'Sushi Go Dice', 'Fairy Tale', 'Settlers of Catan', '5 Alive', 'Poetry for Neanderthals', 'Least count', "King's in the Corner", 'Infinity Gauntlet', 'Ten', 'Silver and Gold', 'King of Tokyo', 'Five Crowns', 'Long Shot', 'Bloom', 'Forbidden Desert', 'The Initiative', 'Horrified', 'Hanabi', 'Arkham Horror', 'Mysterium', 'Control', 'Coup', 'Jenga', 'Tower of Arkhanos']
+    results = pd.DataFrame(sheets_query, columns = columns)
+    results = results.sort_values(by = 'Date of Entry', ascending = False)
+    results_trim = []
+    for name in results['Name'].unique():
+        results_trim.append(results[results['Name'] == name].iloc[0])
+    results_trim = pd.concat(results_trim, axis = 1)
+    results_trim.columns = results_trim.loc['Name']
+    results_trim = results_trim.drop(['Date of Entry','Name'])
+    return results_trim
+
 
 
 def processResults(data, overall_only = False):
