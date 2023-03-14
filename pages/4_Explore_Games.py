@@ -24,6 +24,8 @@ from dataLoader import processResults
 #mpl.rcParams['figure.edgecolor'] = 'white'
 #mpl.rcParams['legend.facecolor'] = 'white'
 
+
+
 unique_games = np.sort(st.session_state['Full Data']['Game Title'].unique())
 game_to_explore = st.selectbox('Pick a game to explore:', unique_games)
 
@@ -115,7 +117,7 @@ if games_with_scores.shape[0] > 0:
         else:
             fig = plt.figure()
             if show_line:
-                sns.histplot(data = games_with_scores, x = 'Score', hue = 'Player', stat = metric, kde = show_line, element = 'step', alpha = 0, edgecolor = None)
+                sns.histplot(data = games_with_scores, x = 'Score', hue = 'Player', stat = metric, kde = show_line, element = 'step', alpha = 0.2, edgecolor = None)
             else:
                 sns.histplot(data = games_with_scores, x = 'Score', hue = 'Player', stat = metric, kde = show_line, element = 'step', alpha = 0.2, edgecolor = None)
     else:
@@ -128,12 +130,12 @@ if games_with_scores.shape[0] > 0:
 #how game is classified
 st.header('How the game is classified')
 
-st.markdown(f"**Person who owns the game:** {st.session_state['Owner'].loc[st.session_state['Owner']['Game Title'] == game_to_explore, 'Game Owner'].values[0]}")
+st.markdown(f"**Person who owns the game:** {st.session_state['Owner'].loc[st.session_state['Owner']['Game Title'] == game_to_explore, 'Owner'].values[0]}")
 
-game_format = ', '.join(st.session_state['Format'].loc[st.session_state['Format']['Game Title'] == game_to_explore, 'Game Format'].values)
+game_format = ', '.join(st.session_state['Format'].loc[st.session_state['Format']['Game Title'] == game_to_explore, 'Format'].values)
 st.markdown(f"**Game Format:** {game_format}")
 
-game_type = ', '.join(st.session_state['Type'].loc[st.session_state['Type']['Game Title'] == game_to_explore, 'Game Type'].values)
+game_type = ', '.join(st.session_state['Type'].loc[st.session_state['Type']['Game Title'] == game_to_explore, 'Type'].values)
 st.markdown(f"**Game Type(s):** {game_type}")
 
 game_themes = ', '.join(st.session_state['Theme'].loc[st.session_state['Theme']['Game Title'] == game_to_explore, 'Theme'].values)

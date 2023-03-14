@@ -122,8 +122,8 @@ plt.xticks(rotation = 45, ha = 'center')
 
 st.pyplot(fig)
 
-## get current dynasties
 
+## get current dynasties
 st.header('Ongoing Dynasties')
 data = fraction_dict['Game'].copy()
 data = data.melt(ignore_index = False)
@@ -132,8 +132,29 @@ data = data.groupby('Winner')['Game Title'].apply(list)
 data = data[['Sam', 'Gabi', 'Reagan']]
 cols = st.columns(3)
 for i in range(data.shape[0]):
+    dynasty_string = ''
     player = data.index[i]
     cols[i].header(player)
     for game in data[player]:
-        cols[i].text(f"{game} ({gplayed_dict['Game'][game]})")
+        if gplayed_dict['Game'][game] >= 2:
+            dynasty_string = dynasty_string + f"{game} ({gplayed_dict['Game'][game]})\n"
+    cols[i].text(dynasty_string)
+        #st.text(f'{player}: {data[player]}')
+        
+
+st.header('"You are Due": Winless Games')
+data = fraction_dict['Game'].copy()
+data = data.melt(ignore_index = False)
+data = data[data['value'].isna()].reset_index()
+data = data.groupby('Winner')['Game Title'].apply(list)
+data = data[['Sam', 'Gabi', 'Reagan']]
+cols = st.columns(3)
+for i in range(data.shape[0]):
+    dynasty_string = ''
+    player = data.index[i]
+    cols[i].header(player)
+    for game in data[player]:
+        if gplayed_dict['Game'][game] >= 2:
+            dynasty_string = dynasty_string + f"{game} ({gplayed_dict['Game'][game]})\n"
+    cols[i].text(dynasty_string)
         #st.text(f'{player}: {data[player]}')
