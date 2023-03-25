@@ -40,7 +40,7 @@ ax[1].set_ylabel('Final Place')
 ax[1].axhline(np.mean(st.session_state['Trivia']['Place']), linestyle = 'dashed', alpha = 0.5, c = 'green', label = 'Mean Place')
 ax[1].axhline(np.median(st.session_state['Trivia']['Place']), linestyle = 'dashed', alpha = 0.5, c = 'blue', label = 'Median Place')
 ax[1].legend()
-plt.xticks(rotation = 35, ha = 'right'
+plt.xticks(rotation = 35, ha = 'right')
 st.pyplot(fig)
 
 st.header('Performance by Category')
