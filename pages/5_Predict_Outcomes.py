@@ -1,5 +1,5 @@
 from sklearn.naive_bayes import BernoulliNB
-from dataLoader import processResults
+from dataLoader import loadData_ratings, processResults, loadData_categories, loadData_results
 import pandas as pd
 import numpy as np
 import streamlit as st

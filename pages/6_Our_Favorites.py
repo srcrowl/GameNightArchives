@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import cross_validate
 from sklearn.linear_model import Ridge, Lasso
-from dataLoader import loadData_ratings, processResults
+from dataLoader import loadData_ratings, processResults, loadData_categories, loadData_results
 import matplotlib.pyplot as plt
 
 if 'Full Data' not in st.session_state:

@@ -5,7 +5,7 @@ from cycler import cycler
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import seaborn as sns
-from dataLoader import processResults
+from dataLoader import loadData_ratings, processResults, loadData_categories, loadData_results
 
 if 'Full Data' not in st.session_state:
     st.session_state['Full Data'] = loadData_results()

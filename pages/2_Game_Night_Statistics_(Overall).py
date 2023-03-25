@@ -1,6 +1,6 @@
 import pandas as pd 
 #import dataLoader
-from dataLoader import processResults
+from dataLoader import loadData_ratings, processResults, loadData_categories, loadData_results
 from game_plots import win_fraction_barplot, win_heatmap
 import matplotlib.pyplot as plt
 import numpy as np
