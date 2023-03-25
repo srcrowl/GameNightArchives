@@ -76,7 +76,13 @@ def loadData_ratings():
     results_trim = results_trim.drop(['Date of Entry','Name'])
     return results_trim
 
-
+def loadData_trivia():
+    #read in ratings
+    sheets_query = runQuery(st.secrets['trivia_url'])
+    columns = ['Date of Entry', 'Trivia Date', 'Semester', 'Players', 'Number of Teams', 'Current Events: Topic', 'Current Events: Score', 'Music Round: Topic', 'Music Round: Score', 'Pop culture: Topic', 'Pop culture: Score', '3rd Place Pick: Topic', '3rd Place Pick: Score', 'Random Knowledge: Score', 'List Topic', 'List Score', 'Place']
+    results = pd.DataFrame(sheets_query, columns = columns)
+    results = results.sort_values(by = 'Date of Entry', ascending = True)
+    return results
 
 def processResults(data, overall_only = False):
 	scores_dict = {}
