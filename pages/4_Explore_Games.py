@@ -7,6 +7,15 @@ import matplotlib as mpl
 import seaborn as sns
 from dataLoader import processResults
 
+if 'Full Data' not in st.session_state:
+    st.session_state['Full Data'] = loadData_results()
+    
+if 'Type' not in st.session_state:
+    loadData_categories()
+    
+if 'Rating' not in st.session_state:
+    st.session_state['Ratings'] = loadData_ratings()
+
 #st.write(mpl.rcParams.keys())
 #mpl.rcParams['axes.edgecolor'] = 'white'
 #mpl.rcParams['axes.labelcolor'] = 'white'

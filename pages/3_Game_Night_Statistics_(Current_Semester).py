@@ -7,6 +7,15 @@ import numpy as np
 import seaborn as sns
 import streamlit as st
 
+if 'Full Data' not in st.session_state:
+    st.session_state['Full Data'] = loadData_results()
+    
+if 'Type' not in st.session_state:
+    loadData_categories()
+    
+if 'Rating' not in st.session_state:
+    st.session_state['Ratings'] = loadData_ratings()
+
 current_semester = st.session_state['Full Data']['Semester'].unique()[-1]
 st.title(f'Game Night Statistics ({current_semester})')
 

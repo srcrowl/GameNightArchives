@@ -6,6 +6,15 @@ from sklearn.linear_model import Ridge, Lasso
 from dataLoader import loadData_ratings, processResults
 import matplotlib.pyplot as plt
 
+if 'Full Data' not in st.session_state:
+    st.session_state['Full Data'] = loadData_results()
+    
+if 'Type' not in st.session_state:
+    loadData_categories()
+    
+if 'Rating' not in st.session_state:
+    st.session_state['Ratings'] = loadData_ratings()
+
 #@st.cache(ttl = 600)
 def plotAlphaChange(x, y, alpha = None):
     coefs = []

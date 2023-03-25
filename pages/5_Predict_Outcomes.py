@@ -3,6 +3,17 @@ from dataLoader import processResults
 import pandas as pd
 import numpy as np
 import streamlit as st
+
+if 'Full Data' not in st.session_state:
+    st.session_state['Full Data'] = loadData_results()
+    
+if 'Type' not in st.session_state:
+    loadData_categories()
+    
+if 'Rating' not in st.session_state:
+    st.session_state['Ratings'] = loadData_ratings()
+
+
 st.header('Building a Naive Bayes Classifier')
 min_games = st.slider('Minimum number of games required for category to be included:', min_value = 0, max_value = 50, value = 5)
 smoothing = st.slider('Smoothing parameter value:', min_value = 0.0, max_value = 1.0, value = 1.0)
