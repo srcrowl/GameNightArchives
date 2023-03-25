@@ -5,7 +5,7 @@ from dataLoader import loadData_results, loadData_categories, loadData_ratings
 
 st.title('Naegle Lab Game Night: A Battle of Wills')
 
-st.write('Yes, yes, we are all here to complete are dissertation and get a doctorate. But of equal importance, who is the best board game player? Who can claim to place pieces the best? Have the most effective dice rool? Who can come up with a single word that indicates water but also a campfire? These questions and more get addressed once a week, and we have accumulated the results from the long battle here.')
+st.write('Yes, yes, we are all here to complete are dissertation and get a doctorate. But of equal importance, who is the best board game player? Who can claim to place pieces the best? Have the most effective dice roll? Who can come up with a single word that indicates water but also a campfire? These questions and more get addressed once a week, and we have accumulated the results from the long battle here.')
 
 if 'Full Data' not in st.session_state:
     st.session_state['Full Data'] = loadData_results()
@@ -25,7 +25,7 @@ st.header('Our Most Played Games!')
 #get the most played games by time
 games_played_by_time = st.session_state['Full Data'].groupby('Game Title')['Play Time (min)'].sum().sort_values(ascending = False)
 
-st.write(f' We have played a total of {number_of_games} games over the course of {time_spent/60} hours. Across these games, we have played {number_of_unique_games} different games. Here are some of our most played:')
+st.write(f' We have played a total of {number_of_games} games over the course of {round(time_spent/60,2)} hours. Across these games, we have played {number_of_unique_games} different games. Here are some of our most played:')
 metric = st.selectbox('By:', ['Time','Number of Plays'])
 if metric == 'Time':
     games_played_by_total = st.session_state['Full Data'].groupby('Game Title')['Play Time (min)'].sum().sort_values(ascending = False)
