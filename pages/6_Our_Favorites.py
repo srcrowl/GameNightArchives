@@ -141,10 +141,10 @@ cols[0].write(ranked_list)
 
 
 #rank by category
-group = cols[1].selectbox('Game Grouping (Min 3 Games):', ['Owner', 'Format', 'Type', 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'])
+group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Type', 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'])
 consensus_grouped = consensus.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index').groupby(group)
 group_sizes = consensus_grouped.size()
-games_to_include = group_sizes[group_sizes > 3].index
+games_to_include = group_sizes[group_sizes > 2].index
 mean_ratings = consensus_grouped.mean().squeeze()[games_to_include]
 sorting_ratings = mean_ratings.sort_values(ascending = False)
 ranked_list = ''
@@ -174,10 +174,10 @@ cols[0].write(ranked_list)
 
 
 #rank by category
-group = cols[1].selectbox('Game Grouping (Min 3 Games):', ['Owner', 'Format', 'Type', 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Least Favorite')
+group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Type', 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Least Favorite')
 consensus_grouped = consensus.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index').groupby(group)
 group_sizes = consensus_grouped.size()
-games_to_include = group_sizes[group_sizes > 3].index
+games_to_include = group_sizes[group_sizes > 2].index
 mean_ratings = consensus_grouped.mean().squeeze()[games_to_include]
 sorting_ratings = mean_ratings.sort_values(ascending = True)
 ranked_list = ''
@@ -214,10 +214,10 @@ cols[0].write(ranked_list)
 
 
 #rank by category
-group = cols[1].selectbox('Game Grouping (Min 3 Games):', ['Owner', 'Format', 'Type', 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Individual Favorite')
+group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Type', 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Individual Favorite')
 y_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index').groupby(group)
 group_sizes = y_grouped.size()
-games_to_include = group_sizes[group_sizes > 3].index
+games_to_include = group_sizes[group_sizes > 2].index
 mean_ratings = y_grouped.mean().squeeze()[games_to_include]
 sorting_ratings = mean_ratings.sort_values(ascending = False)
 ranked_list = ''
@@ -247,10 +247,10 @@ cols[0].write(ranked_list)
 
 
 #rank by category
-group = cols[1].selectbox('Game Grouping (Min 3 Games):', ['Owner', 'Format', 'Type', 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Individual Least Favorite')
+group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Type', 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Individual Least Favorite')
 y_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index').groupby(group)
 group_sizes = y_grouped.size()
-games_to_include = group_sizes[group_sizes > 3].index
+games_to_include = group_sizes[group_sizes > 2].index
 mean_ratings = y_grouped.mean().squeeze()[games_to_include]
 sorting_ratings = mean_ratings.sort_values(ascending = True)
 ranked_list = ''
