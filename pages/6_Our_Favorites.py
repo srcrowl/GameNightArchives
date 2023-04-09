@@ -15,7 +15,7 @@ if 'Type' not in st.session_state:
 if 'Rating' not in st.session_state:
     st.session_state['Ratings'] = loadData_ratings()
 
-#@st.cache(ttl = 600)
+@st.cache(ttl = 600)
 def plotAlphaChange(x, y, alpha = None):
     coefs = []
     fig,ax = plt.subplots(nrows = 3, sharex = True)
@@ -48,12 +48,8 @@ def plotAlphaChange(x, y, alpha = None):
     #ax[2].set_title('Cross-Validation Error')
     return fig
     
-#@st.cache(ttl = 600)
+@st.cache(ttl = 600)
 def generateGroupings(use_list):
-    data = st.session_state['Full Data'].copy()
-    data['Winner'] = data['Winner'].apply(lambda x: x.split(';'))
-    data = data.explode('Winner').reset_index()
-
     groupings = []
     if use_list[0]:
         owner = st.session_state['Owner'].copy().dropna()
@@ -100,7 +96,7 @@ def generateGroupings(use_list):
     groupings = pd.concat(groupings)
     return groupings
     
-#@st.cache(ttl = 600)
+@st.cache(ttl = 600)
 def constructInputs(groupings, ratings):
     #construct x
     x = None
@@ -119,9 +115,15 @@ def constructInputs(groupings, ratings):
     return x
 
 st.title('Summary of Our Ratings')
+gamenight_only = st.checkbox('Restrict ratings to those played during game night', value = True)
+allrated_only = st.checkbox('Restrict ratings to games that everyone has rated', value = True)
 scores_dict, gplayed_dict, fraction_dict, pae_dict = processResults(st.session_state['Full Data'])
 overall_fraction = scores_dict['Game'].sum()/gplayed_dict['Game'].sum()
-ratings = st.session_state['Ratings'].dropna()
+ratings = st.session_state['Ratings'].copy()
+if gamenight_only:
+    ratings = ratings.loc[st.session_state['Full Data']['Game Title'].unique()]
+if allrated_only:
+    ratings = ratings.dropna()
 st.header('Consensus Preferences')
 st.subheader('Favorites')
 consensus = ratings.mean(axis = 1)
@@ -195,7 +197,7 @@ player = st.selectbox('Player',['Sam', 'Gabi', 'Reagan'])
 
 
 #y = fraction_dict['Game'][player]
-y = ratings[player]
+y = ratings[player].dropna()
 #favorite games
 st.subheader(f"{player}'s Favorites")
 cols = st.columns(2)
