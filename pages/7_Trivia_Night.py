@@ -10,6 +10,9 @@ if 'Trivia' not in st.session_state:
 st.title('Trivia Night Results')
 st.markdown('About once a month, we forego game night to go to Trivia at Star Hill Brewery. We recently started recording how well we do each time, and share it here')
 
+st.markdown('Add new trivia results here: [link to google form](https://docs.google.com/forms/d/e/1FAIpQLSfya9fkNi8Wj_FyzJLVdWvjSI_JzVP5WhnEXO0b8YMZHZbQAQ/viewform?usp=sf_link)')
+
+
 st.header('Summary Stats')
 cols = st.columns(3)
 cols[0].metric('Number of Trivia Outings', st.session_state['Trivia'].shape[0], delta = None)
