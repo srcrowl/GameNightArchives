@@ -144,7 +144,15 @@ st.markdown(f"**Person who owns the game:** {st.session_state['Owner'].loc[st.se
 game_format = ', '.join(st.session_state['Format'].loc[st.session_state['Format']['Game Title'] == game_to_explore, 'Format'].values)
 st.markdown(f"**Game Format:** {game_format}")
 
-game_type = ', '.join(st.session_state['Type'].loc[st.session_state['Type']['Game Title'] == game_to_explore, 'Type'].values)
+st.markdown(f"**Size of the teams:** {st.session_state['Team Size'].loc[st.session_state['Team Size']['Game Title'] == game_to_explore, 'Team Size'].values[0]}")
+
+primary_class = st.session_state['Primary Classification'].loc[st.session_state['Primary Classification']['Game Title'] == game_to_explore, 'Primary Classification']
+if primary_class.shape[0] > 0:
+    st.markdown(f"**Primary Classification:** {primary_class.values[0]}")
+
+st.markdown(f"**Average game length:** {st.session_state['Game Length'].loc[st.session_state['Game Length']['Game Title'] == game_to_explore, 'Game Length'].values[0]}")
+
+game_type = ', '.join(st.session_state["Sam's Mechanisms"].loc[st.session_state["Sam's Mechanisms"]["Game Title"] == game_to_explore, "Sam's Mechanisms"].values)
 st.markdown(f"**Game Type(s):** {game_type}")
 
 game_themes = ', '.join(st.session_state['Theme'].loc[st.session_state['Theme']['Game Title'] == game_to_explore, 'Theme'].values)

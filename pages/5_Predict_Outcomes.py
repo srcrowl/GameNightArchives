@@ -20,7 +20,10 @@ smoothing = st.slider('Smoothing parameter value:', min_value = 0.0, max_value =
 #load data
 scores_dict, gplayed_dict, fraction_dict, pae_dict = processResults(st.session_state['Full Data'])
 owner_list = gplayed_dict['Owner'][gplayed_dict['Owner'] >= min_games].index.values
-type_list = gplayed_dict['Type'][gplayed_dict['Type'] >= min_games].index.values
+length_list = gplayed_dict['Game Length'][gplayed_dict['Game Length'] >= min_games].index.values
+team_list = gplayed_dict["Team Size"][gplayed_dict["Team Size"] >= min_games].index.values
+class_list = gplayed_dict["Primary Classification"][gplayed_dict["Primary Classification"] >= min_games].index.values
+type_list = gplayed_dict["Sam's Mechanisms"][gplayed_dict["Sam's Mechanisms"] >= min_games].index.values
 theme_list = gplayed_dict['Theme'][gplayed_dict['Theme'] >= min_games].index.values
 format_list = gplayed_dict['Format'][gplayed_dict['Format'] >= min_games].index.values
 bggtype_list = gplayed_dict['BGG Type'][gplayed_dict['BGG Type'] >= min_games].index.values
@@ -31,8 +34,12 @@ bggmech_list = gplayed_dict['BGG Mechanism'][gplayed_dict['BGG Mechanism'] >= mi
 cols = st.columns(4)
 use_owner = cols[0].checkbox('Game Owner', value = True)
 use_format = cols[1].checkbox('Game Format', value = True)
-use_type = cols[2].checkbox('Game Type', value = True)
-use_theme = cols[3].checkbox('Game Theme', value = True)
+use_team = cols[2].checkbox('Team Size', value = False)
+use_length = cols[3].checkbox('Game Length', value = True)
+cols = st.columns(3)
+use_class = cols[0].checkbox('Primary Classification', value = True)
+use_type = cols[1].checkbox("Sam's Mechanisms", value = True)
+use_theme = cols[2].checkbox('Game Theme', value = True)
 cols = st.columns(3)
 use_bggtype = cols[0].checkbox('BGG Type', value = True)
 use_bggcat = cols[1].checkbox('BGG Category', value = True)
@@ -48,21 +55,39 @@ if generate_classifier:
     groupings = []
     if use_owner:
         owner = st.session_state['Owner'].copy()
-        owner = owner[owner['Game Owner'].isin(owner_list)]
-        owner['Game Owner'] = owner['Game Owner'].apply(lambda x: 'Owner:'+x)
-        owner = owner.rename({'Game Owner': 'Category'}, axis = 1)
+        owner = owner[owner['Owner'].isin(owner_list)]
+        owner['Owner'] = owner['Owner'].apply(lambda x: 'Owner:'+x)
+        owner = owner.rename({'Owner': 'Category'}, axis = 1)
         groupings.append(owner)
     if use_format:
         gformat = st.session_state['Format'].copy()
-        gformat = gformat[gformat['Game Format'].isin(format_list)]
-        gformat['Game Format'] = gformat['Game Format'].apply(lambda x: 'Format:'+x)
-        gformat = gformat.rename({'Game Format': 'Category'}, axis = 1)
+        gformat = gformat[gformat['Format'].isin(format_list)]
+        gformat['Format'] = gformat['Format'].apply(lambda x: 'Format:'+x)
+        gformat = gformat.rename({'Format': 'Category'}, axis = 1)
         groupings.append(gformat)
+    if use_team:
+        gteam = st.session_state['Team Size'].copy()
+        gteam = gteam[gteam['Team Size'].isin(team_list)]
+        gteam['Team Size'] = gteam['Team Size'].apply(lambda x: 'Size:'+x)
+        gteam = gteam.rename({'Team Size': 'Category'}, axis = 1)
+        groupings.append(gteam)
+    if use_length:
+        glength = st.session_state['Game Length'].copy()
+        glength = glength[glength['Game Length'].isin(length_list)]
+        glength['Game Length'] = glength['Game Length'].apply(lambda x: 'Length:'+x)
+        glength = glength.rename({'Game Length': 'Category'}, axis = 1)
+        groupings.append(glength)
+    if use_class:
+        gclass = st.session_state['Primary Classification'].copy()
+        gclass = gclass[gclass['Primary Classification'].isin(class_list)]
+        gclass['Primary Classification'] = gclass['Primary Classification'].apply(lambda x: 'Class:'+x)
+        gclass = gclass.rename({'Primary Classification': 'Category'}, axis = 1)
+        groupings.append(gclass)
     if use_type:
-        gtype = st.session_state['Type'].copy()
-        gtype = gtype[gtype['Game Type'].isin(type_list)]
-        gtype['Game Type'] = gtype['Game Type'].apply(lambda x: 'Type:'+x)
-        gtype = gtype.rename({'Game Type': 'Category'}, axis = 1)
+        gtype = st.session_state["Sam's Mechanisms"].copy()
+        gtype = gtype[gtype["Sam's Mechanisms"].isin(type_list)]
+        gtype["Sam's Mechanisms"] = gtype["Sam's Mechanisms"].apply(lambda x: 'Type:'+x)
+        gtype = gtype.rename({"Sam's Mechanisms": 'Category'}, axis = 1)
         groupings.append(gtype)
     if use_theme:
         gtheme = st.session_state['Theme'].copy()

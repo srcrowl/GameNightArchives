@@ -30,7 +30,7 @@ def processCategories(data, category_type = 'Game Type'):
 def loadData_categories():
     #read in categories spreadsheet
 	sheets_query = runQuery(st.secrets['category_url'])
-	results = pd.DataFrame(sheets_query, columns = ['Data of Entry', 'Game Title', 'Owner', 'Format', 'Type', 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism', 'BGG Rating', 'BGG Weight', "Sams Ratings", 'Gabis Ratings', 'Reagans Ratings'])
+	results = pd.DataFrame(sheets_query, columns = ['Data of Entry', 'Game Title', 'Owner', 'Format', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism', 'BGG Rating', 'BGG Weight', 'Primary Classification', 'Team Size', 'Game Length'])
 	st.session_state['Categories'] = results.copy()
 	
 	#establish owner dataframe
@@ -40,9 +40,21 @@ def loadData_categories():
 	col = 'Format'
 	st.session_state['Format'] = processCategories(results[['Game Title', col]], col)
 	
+    	#establish format dataframe
+	col = 'Primary Classification'
+	st.session_state['Primary Classification'] = processCategories(results[['Game Title', col]], col)
+    
+        	#establish length dataframe
+	col = 'Game Length'
+	st.session_state[col] = processCategories(results[['Game Title', col]], col)
+    
+            	#establish length dataframe
+	col = 'Team Size'
+	st.session_state[col] = processCategories(results[['Game Title', col]], col)
+    
 	#establish type dataframe
-	col = 'Type'
-	st.session_state['Type'] = processCategories(results[['Game Title', col]],col)
+	col = "Sam's Mechanisms"
+	st.session_state[col] = processCategories(results[['Game Title', col]],col)
 	
 	#establish theme dataframe
 	col = 'Theme'
@@ -111,9 +123,18 @@ def processResults(data, overall_only = False):
 		
 		#get format specific results
 		scores_dict['Format'], gplayed_dict['Format'], fraction_dict['Format'], pae_dict['Format'] = getDictionaries('Format', 'Format', overall_scores, games_played, overall_fraction)
+        
+        		#get primary classification specific results
+		scores_dict['Primary Classification'], gplayed_dict['Primary Classification'], fraction_dict['Primary Classification'], pae_dict['Primary Classification'] = getDictionaries('Primary Classification', 'Primary Classification', overall_scores, games_played, overall_fraction)
+        
+                		#get primary classification specific results
+		scores_dict['Game Length'], gplayed_dict['Game Length'], fraction_dict['Game Length'], pae_dict['Game Length'] = getDictionaries('Game Length', 'Game Length', overall_scores, games_played, overall_fraction)
+        
+        #get team size specific results
+		scores_dict['Team Size'], gplayed_dict['Team Size'], fraction_dict['Team Size'], pae_dict['Team Size'] = getDictionaries('Team Size', 'Team Size', overall_scores, games_played, overall_fraction)
 		
 		#get type specific results
-		scores_dict['Type'], gplayed_dict['Type'], fraction_dict['Type'], pae_dict['Type'] = getDictionaries('Type', 'Type', overall_scores, games_played, overall_fraction)
+		scores_dict["Sam's Mechanisms"], gplayed_dict["Sam's Mechanisms"], fraction_dict["Sam's Mechanisms"], pae_dict["Sam's Mechanisms"] = getDictionaries("Sam's Mechanisms", "Sam's Mechanisms", overall_scores, games_played, overall_fraction)
 		
 		#get theme specific results
 		scores_dict['Theme'], gplayed_dict['Theme'], fraction_dict['Theme'], pae_dict['Theme'] = getDictionaries('Theme', 'Theme', overall_scores, games_played, overall_fraction)

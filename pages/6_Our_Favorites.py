@@ -64,30 +64,48 @@ def generateGroupings(use_list):
         gformat = gformat.rename({'Format': 'Category'}, axis = 1)
         groupings.append(gformat)
     if use_list[2]:
-        gtype = st.session_state['Type'].copy().dropna()
-        #gtype = gtype[gtype['Type'].isin(type_list)]
-        gtype['Type'] = gtype['Type'].apply(lambda x: 'Type:'+x)
-        gtype = gtype.rename({'Type': 'Category'}, axis = 1)
-        groupings.append(gtype)
+        gteam = st.session_state['Team Size'].copy()
+        #gteam = gteam[gteam['Team Size'].isin(team_list)]
+        gteam['Team Size'] = gteam['Team Size'].apply(lambda x: 'Size:'+x)
+        gteam = gteam.rename({'Team Size': 'Category'}, axis = 1)
+        groupings.append(gteam)
     if use_list[3]:
+        glength = st.session_state['Game Length'].copy()
+        #glength = glength[glength['Game Length'].isin(length_list)]
+        glength['Game Length'] = glength['Game Length'].apply(lambda x: 'Length:'+x)
+        glength = glength.rename({'Game Length': 'Category'}, axis = 1)
+        groupings.append(glength)
+    if use_list[4]:
+        gclass = st.session_state['Primary Classification'].copy()
+        #gclass = gclass[gclass['Primary Classification'].isin(class_list)]
+        gclass['Primary Classification'] = gclass['Primary Classification'].apply(lambda x: 'Class:'+x)
+        gclass = gclass.rename({'Primary Classification': 'Category'}, axis = 1)
+        groupings.append(gclass)
+    if use_list[5]:
+        gtype = st.session_state["Sam's Mechanisms"].copy()
+        #gtype = gtype[gtype["Sam's Mechanisms"].isin(type_list)]
+        gtype["Sam's Mechanisms"] = gtype["Sam's Mechanisms"].apply(lambda x: 'Type:'+x)
+        gtype = gtype.rename({"Sam's Mechanisms": 'Category'}, axis = 1)
+        groupings.append(gtype)
+    if use_list[6]:
         gtheme = st.session_state['Theme'].copy().dropna()
         #gtheme = gtheme[gtheme['Theme'].isin(theme_list)]
         gtheme['Theme'] = gtheme['Theme'].apply(lambda x: 'Theme:'+x)
         gtheme = gtheme.rename({'Theme': 'Category'}, axis = 1)
         groupings.append(gtheme)
-    if use_list[4]:
+    if use_list[7]:
         bgg_type = st.session_state['BGG Type'].copy().dropna()
         #bgg_type = bgg_type[bgg_type['BGG Type'].isin(bggtype_list)]
         bgg_type['BGG Type'] = bgg_type['BGG Type'].apply(lambda x: 'BGG_Type:'+x)
         bgg_type = bgg_type.rename({'BGG Type': 'Category'}, axis = 1)
         groupings.append(bgg_type)
-    if use_list[5]:
+    if use_list[8]:
         bgg_cat = st.session_state['BGG Category'].copy().dropna()
         #bgg_cat = bgg_cat[bgg_cat['BGG Category'].isin(bggcat_list)]
         bgg_cat['BGG Category'] = bgg_cat['BGG Category'].apply(lambda x: 'BGG_Cat:'+x)
         bgg_cat = bgg_cat.rename({'BGG Category': 'Category'}, axis = 1)
         groupings.append(bgg_cat)
-    if use_list[6]:
+    if use_list[9]:
         bgg_mech = st.session_state['BGG Mechanism'].copy().dropna()
         #bgg_mech = bgg_mech[bgg_mech['BGG Mechanism'].isin(bggmech_list)]
         bgg_mech['BGG Mechanism'] = bgg_mech['BGG Mechanism'].apply(lambda x: 'BGG_Mech:'+x)
@@ -143,10 +161,11 @@ cols[0].write(ranked_list)
 
 
 #rank by category
-group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Type', 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'])
+group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Team Size', 'Game Length', 'Primary Classification', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'])
 consensus_grouped = consensus.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index').groupby(group)
 group_sizes = consensus_grouped.size()
-games_to_include = group_sizes[group_sizes > 2].index
+min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'all_most') 
+games_to_include = group_sizes[group_sizes > min_games].index
 mean_ratings = consensus_grouped.mean().squeeze()[games_to_include]
 sorting_ratings = mean_ratings.sort_values(ascending = False)
 ranked_list = ''
@@ -154,7 +173,7 @@ for rank, game in zip(range(1,sorting_ratings.shape[0]+1), sorting_ratings.index
     if rank > 10 and prev_rating > sorting_ratings.loc[game]:
         break
     else:
-        ranked_list = ranked_list + f'{rank}. {game} ({round(sorting_ratings.loc[game], 2)})\n'
+        ranked_list = ranked_list + f'{rank}. {game} = {round(sorting_ratings.loc[game], 2)} ({group_sizes[game]} games)\n'
     prev_rating = sorting_ratings.loc[game]
 cols[1].write(ranked_list)
 
@@ -167,7 +186,7 @@ for rank, game in zip(range(1,sorting_ratings.shape[0]), sorting_ratings.index):
     if rank > 10 and prev_rating < sorting_ratings.loc[game]:
         break
     else:
-        ranked_list = ranked_list + f'{rank}. {game} ({round(sorting_ratings.loc[game],2)})\n'
+        ranked_list = ranked_list + f'{rank}. {game} = {round(sorting_ratings.loc[game],2)}\n'
     prev_rating = sorting_ratings.loc[game]
 
 #games ranked list
@@ -176,10 +195,11 @@ cols[0].write(ranked_list)
 
 
 #rank by category
-group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Type', 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Least Favorite')
+group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Team Size', 'Game Length', 'Primary Classification', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Least Favorite')
 consensus_grouped = consensus.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index').groupby(group)
 group_sizes = consensus_grouped.size()
-games_to_include = group_sizes[group_sizes > 2].index
+min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'all_least')
+games_to_include = group_sizes[group_sizes > min_games].index
 mean_ratings = consensus_grouped.mean().squeeze()[games_to_include]
 sorting_ratings = mean_ratings.sort_values(ascending = True)
 ranked_list = ''
@@ -187,7 +207,7 @@ for rank, game in zip(range(1,sorting_ratings.shape[0]+1), sorting_ratings.index
     if rank > 10 and prev_rating < sorting_ratings.loc[game]:
         break
     else:
-        ranked_list = ranked_list + f'{rank}. {game} ({round(sorting_ratings.loc[game], 2)})\n'
+        ranked_list = ranked_list + f'{rank}. {game} = {round(sorting_ratings.loc[game], 2)} ({group_sizes[game]} games)\n'
     prev_rating = sorting_ratings.loc[game]
 cols[1].write(ranked_list)
 st.write('\n\n\n\n')
@@ -216,10 +236,11 @@ cols[0].write(ranked_list)
 
 
 #rank by category
-group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Type', 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Individual Favorite')
+group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Team Size', 'Game Length', 'Primary Classification', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Individual Favorite')
 y_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index').groupby(group)
 group_sizes = y_grouped.size()
-games_to_include = group_sizes[group_sizes > 2].index
+min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'player_most')
+games_to_include = group_sizes[group_sizes > min_games].index
 mean_ratings = y_grouped.mean().squeeze()[games_to_include]
 sorting_ratings = mean_ratings.sort_values(ascending = False)
 ranked_list = ''
@@ -227,7 +248,7 @@ for rank, game in zip(range(1,sorting_ratings.shape[0]+1), sorting_ratings.index
     if rank > 10 and prev_rating > sorting_ratings.loc[game]:
         break
     else:
-        ranked_list = ranked_list + f'{rank}. {game} ({round(sorting_ratings.loc[game], 2)})\n'
+        ranked_list = ranked_list + f'{rank}. {game} = {round(sorting_ratings.loc[game], 2)} ({group_sizes[game]} games))\n'
     prev_rating = sorting_ratings.loc[game]
 cols[1].write(ranked_list)
 
@@ -249,10 +270,11 @@ cols[0].write(ranked_list)
 
 
 #rank by category
-group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Type', 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Individual Least Favorite')
+group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Team Size', 'Game Length', 'Primary Classification', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Individual Least Favorite')
 y_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index').groupby(group)
 group_sizes = y_grouped.size()
-games_to_include = group_sizes[group_sizes > 2].index
+min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'player_least')
+games_to_include = group_sizes[group_sizes > min_games].index
 mean_ratings = y_grouped.mean().squeeze()[games_to_include]
 sorting_ratings = mean_ratings.sort_values(ascending = True)
 ranked_list = ''
@@ -260,7 +282,7 @@ for rank, game in zip(range(1,sorting_ratings.shape[0]+1), sorting_ratings.index
     if rank > 10 and prev_rating < sorting_ratings.loc[game]:
         break
     else:
-        ranked_list = ranked_list + f'{rank}. {game} ({round(sorting_ratings.loc[game], 2)})\n'
+        ranked_list = ranked_list + f'{rank}. {game} = {round(sorting_ratings.loc[game], 2)} ({group_sizes[game]} games)\n'
     prev_rating = sorting_ratings.loc[game]
 cols[1].write(ranked_list)
 
@@ -269,13 +291,17 @@ st.subheader(f"Predict {player}'s Rating")
 cols = st.columns(4)
 use_owner = cols[0].checkbox('Game Owner', value = True)
 use_format = cols[1].checkbox('Game Format', value = True)
-use_type = cols[2].checkbox('Game Type', value = True)
-use_theme = cols[3].checkbox('Game Theme', value = True)
+use_team = cols[2].checkbox('Team Size', value = False)
+use_length = cols[3].checkbox('Game Length', value = True)
+cols = st.columns(3)
+use_class = cols[0].checkbox('Primary Classification', value = True)
+use_type = cols[1].checkbox("Sam's Mechanisms", value = True)
+use_theme = cols[2].checkbox("Game Theme", value = True)
 cols = st.columns(3)
 use_bggtype = cols[0].checkbox('BGG Type', value = True)
 use_bggcat = cols[1].checkbox('BGG Category', value = True)
 use_bggmech = cols[2].checkbox('BGG Mechanism', value = True)
-use_list = [use_owner, use_format, use_type, use_theme, use_bggtype, use_bggcat, use_bggmech]
+use_list = [use_owner, use_format,use_team, use_length, use_class, use_type, use_theme, use_bggtype, use_bggcat, use_bggmech]
 
 min_games = st.slider('Minimum number of games required for category to be included:', min_value = 0, max_value = 10, value = 0)
 #owner_list = gplayed_dict['Owner'][gplayed_dict['Owner'] >= min_games].index.values
