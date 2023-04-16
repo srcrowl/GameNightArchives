@@ -152,6 +152,11 @@ if primary_class.shape[0] > 0:
 
 st.markdown(f"**Average game length:** {st.session_state['Game Length'].loc[st.session_state['Game Length']['Game Title'] == game_to_explore, 'Game Length'].values[0]}")
 
+win_condition = ', '.join(st.session_state["Win Condition"].loc[st.session_state["Win Condition"]["Game Title"] == game_to_explore, "Win Condition"].values)
+st.markdown(f"**Win Condition:** {win_condition}")
+
+st.markdown(f"**Luck Score (1 = No Luck, 5 = All Luck):** {st.session_state['Luck Score'].loc[st.session_state['Luck Score']['Game Title'] == game_to_explore, 'Luck Score'].values[0]}")
+
 game_type = ', '.join(st.session_state["Sam's Mechanisms"].loc[st.session_state["Sam's Mechanisms"]["Game Title"] == game_to_explore, "Sam's Mechanisms"].values)
 st.markdown(f"**Game Type(s):** {game_type}")
 

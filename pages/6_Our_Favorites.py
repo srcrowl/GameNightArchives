@@ -165,7 +165,7 @@ group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'T
 consensus_grouped = consensus.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index').groupby(group)
 group_sizes = consensus_grouped.size()
 min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'all_most') 
-games_to_include = group_sizes[group_sizes > min_games].index
+games_to_include = group_sizes[group_sizes >= min_games].index
 mean_ratings = consensus_grouped.mean().squeeze()[games_to_include]
 sorting_ratings = mean_ratings.sort_values(ascending = False)
 ranked_list = ''
@@ -199,7 +199,7 @@ group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'T
 consensus_grouped = consensus.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index').groupby(group)
 group_sizes = consensus_grouped.size()
 min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'all_least')
-games_to_include = group_sizes[group_sizes > min_games].index
+games_to_include = group_sizes[group_sizes >= min_games].index
 mean_ratings = consensus_grouped.mean().squeeze()[games_to_include]
 sorting_ratings = mean_ratings.sort_values(ascending = True)
 ranked_list = ''
@@ -240,7 +240,7 @@ group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'T
 y_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index').groupby(group)
 group_sizes = y_grouped.size()
 min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'player_most')
-games_to_include = group_sizes[group_sizes > min_games].index
+games_to_include = group_sizes[group_sizes >= min_games].index
 mean_ratings = y_grouped.mean().squeeze()[games_to_include]
 sorting_ratings = mean_ratings.sort_values(ascending = False)
 ranked_list = ''
@@ -274,7 +274,7 @@ group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'T
 y_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index').groupby(group)
 group_sizes = y_grouped.size()
 min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'player_least')
-games_to_include = group_sizes[group_sizes > min_games].index
+games_to_include = group_sizes[group_sizes >= min_games].index
 mean_ratings = y_grouped.mean().squeeze()[games_to_include]
 sorting_ratings = mean_ratings.sort_values(ascending = True)
 ranked_list = ''
