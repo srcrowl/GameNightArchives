@@ -132,6 +132,8 @@ def constructInputs(groupings, ratings):
     x = x.T
     return x
 
+coop_games = ['Forbidden Desert', 'The Initiative', 'Horrified', 'Hanabi', 'Arkham Horror', 'Mysterium', 'The Crew: Quest for Planet Nine']
+
 st.title('Summary of Our Ratings')
 gamenight_only = st.checkbox('Restrict ratings to those played during game night', value = True)
 allrated_only = st.checkbox('Restrict ratings to games that everyone has rated', value = True)
@@ -139,7 +141,8 @@ scores_dict, gplayed_dict, fraction_dict, pae_dict = processResults(st.session_s
 overall_fraction = scores_dict['Game'].sum()/gplayed_dict['Game'].sum()
 ratings = st.session_state['Ratings'].copy()
 if gamenight_only:
-    ratings = ratings.loc[st.session_state['Full Data']['Game Title'].unique()]
+    games_played = list(st.session_state['Full Data']['Game Title'].unique()) + coop_games
+    ratings = ratings.loc[games_played]
 if allrated_only:
     ratings = ratings.dropna()
 st.header('Consensus Preferences')
@@ -166,7 +169,7 @@ consensus_grouped = consensus.reset_index().merge(st.session_state[group], right
 group_sizes = consensus_grouped.size()
 min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'all_most') 
 games_to_include = group_sizes[group_sizes >= min_games].index
-mean_ratings = consensus_grouped.mean().squeeze()[games_to_include]
+mean_ratings = consensus_grouped[0].mean()[games_to_include]
 sorting_ratings = mean_ratings.sort_values(ascending = False)
 ranked_list = ''
 for rank, game in zip(range(1,sorting_ratings.shape[0]+1), sorting_ratings.index):
@@ -248,7 +251,7 @@ for rank, game in zip(range(1,sorting_ratings.shape[0]+1), sorting_ratings.index
     if rank > 10 and prev_rating > sorting_ratings.loc[game]:
         break
     else:
-        ranked_list = ranked_list + f'{rank}. {game} = {round(sorting_ratings.loc[game], 2)} ({group_sizes[game]} games))\n'
+        ranked_list = ranked_list + f'{rank}. {game} = {round(sorting_ratings.loc[game], 2)} ({group_sizes[game]} games)\n'
     prev_rating = sorting_ratings.loc[game]
 cols[1].write(ranked_list)
 
