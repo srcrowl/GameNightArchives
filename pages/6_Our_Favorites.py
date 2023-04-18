@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import cross_validate
 from sklearn.linear_model import Ridge, Lasso
+from sklearn.ensemble import RandomForestRegressor
 from dataLoader import loadData_ratings, processResults, loadData_categories, loadData_results
 import matplotlib.pyplot as plt
 
@@ -306,56 +307,71 @@ use_bggcat = cols[1].checkbox('BGG Category', value = True)
 use_bggmech = cols[2].checkbox('BGG Mechanism', value = True)
 use_list = [use_owner, use_format,use_team, use_length, use_class, use_type, use_theme, use_bggtype, use_bggcat, use_bggmech]
 
-min_games = st.slider('Minimum number of games required for category to be included:', min_value = 0, max_value = 10, value = 0)
-#owner_list = gplayed_dict['Owner'][gplayed_dict['Owner'] >= min_games].index.values
-#type_list = gplayed_dict['Type'][gplayed_dict['Type'] >= min_games].index.values
-#theme_list = gplayed_dict['Theme'][gplayed_dict['Theme'] >= min_games].index.values
-#format_list = gplayed_dict['Format'][gplayed_dict['Format'] >= min_games].index.values
-#bggtype_list = gplayed_dict['BGG Type'][gplayed_dict['BGG Type'] >= min_games].index.values
-#bggcat_list = gplayed_dict['BGG Category'][gplayed_dict['BGG Category'] >= min_games].index.values
-#bggmech_list = gplayed_dict['BGG Mechanism'][gplayed_dict['BGG Mechanism'] >= min_games].index.values
-#game_lists = [owner_list,format_list, type_list, theme_list, bggtype_list, bggcat_list, bggmech_list]
+min_games = st.slider('Minimum number of games required for category to be included:', min_value = 1, max_value = 10, value = 0)
+model = st.radio('Model:', ['Random Forest', 'Ridge Regression'], horizontal = True)
 
 
-show_alpha = st.checkbox('Show Impact of Alpha', key = 'plot_alpha')
-#show impact of alpha
-if show_alpha:
-    groupings = generateGroupings(use_list)
-    sizes = groupings.groupby('Category').size()
-    groups_to_keep = sizes[sizes >= min_games].index
-    groupings = groupings[groupings['Category'].isin(groups_to_keep)]
-    x = constructInputs(groupings, ratings)
-    fig = plotAlphaChange(x,y)
-    st.pyplot(fig)
-alpha = st.slider('Regularization Parameter', min_value = 0.00, max_value = 3.0, value = 1.0, step = 0.1)
-generate_model = st.checkbox('Build Model From Current Data', value = False, key = 'model_generation')
-if generate_model:
-    #if it hasn't already been done, construct necessary groupings and x 
-    if not show_alpha:
-        groupings = generateGroupings(use_list)
-        sizes = groupings.groupby('Category').size()
-        groups_to_keep = sizes[sizes >= min_games].index
-        groupings = groupings[groupings['Category'].isin(groups_to_keep)]
-        x = constructInputs(groupings, ratings)
-    model = Ridge(alpha = alpha)
-    model.fit(x, y)
-    score = model.score(x,y)
-    st.text('\nModel Built')
-    st.markdown(f'$R^2=$:{score}')
-    
-    show_coef = st.checkbox('Show Model Coefficents')
-    #get most predictive categories
-    if show_coef:
-        coef = pd.Series(data = model.coef_, index = x.columns, name = 'Coefficients')
-        coef = coef.sort_values(ascending = False)
-        st.write(coef)
-    #sort_index = numpy.argsort(vals)
+groupings = generateGroupings(use_list)
+sizes = groupings.groupby('Category').size()
+groups_to_keep = sizes[sizes >= min_games].index
+groupings = groupings[groupings['Category'].isin(groups_to_keep)]
+x = constructInputs(groupings, y)
+if model == 'Ridge Regression':
+    show_alpha = st.checkbox('Show Impact of Alpha', key = 'plot_alpha')
+    #show impact of alpha
+    if show_alpha:
+        fig = plotAlphaChange(x,y)
+        st.pyplot(fig)
+    alpha = st.slider('Regularization Parameter', min_value = 0.00, max_value = 3.0, value = 1.0, step = 0.1)
+    generate_model = st.checkbox('Build Model From Current Data', value = False, key = 'model_generation')
+    if generate_model:
+        #if it hasn't already been done, construct necessary groupings and x 
+        if not show_alpha:
+            groupings = generateGroupings(use_list)
+            sizes = groupings.groupby('Category').size()
+            groups_to_keep = sizes[sizes >= min_games].index
+            groupings = groupings[groupings['Category'].isin(groups_to_keep)]
+            x = constructInputs(groupings, ratings)
+        model = Ridge(alpha = alpha)
+        model.fit(x, y)
+        score = model.score(x,y)
+        st.text('\nModel Built')
+        st.markdown(f'$R^2=$:{score}')
+        
+        show_coef = st.checkbox('Show Model Coefficents')
+        #get most predictive categories
+        if show_coef:
+            coef = pd.Series(data = model.coef_, index = x.columns, name = 'Coefficients')
+            coef = coef.sort_values(ascending = False)
+            st.write(coef)
+        #sort_index = numpy.argsort(vals)
 
-    new_groups = st.multiselect('Groups associated with game to predict rating for:', np.sort(x.columns))
-    x_new = [[1 if group in new_groups else 0 for group in x.columns]]
-    y = model.predict(x_new)
-    st.write(f'Predicted rating = {y[0]}')
+        new_groups = st.multiselect('Groups associated with game to predict rating for:', np.sort(x.columns))
+        x_new = [[1 if group in new_groups else 0 for group in x.columns]]
+        y = model.predict(x_new)
+        st.write(f'Predicted rating = {y[0]}')
+elif model == 'Random Forest':
+    generate_model = st.checkbox('Build Model From Current Data', value = False, key = 'model_generation')
+    if generate_model:
+        n_trees = 500
+        model = RandomForestRegressor(n_estimators = n_trees)
+        model.fit(x, y)
+        score = model.score(x,y)
+        st.text('\nModel Built')
+        st.markdown(f'$R^2=$:{score}')
+        
+        show_features = st.checkbox('Show Feature Importance')
+        #get most predictive categories
+        if show_features:
+            features = pd.Series(data = model.feature_importances_, index = x.columns, name = 'Feature Importance')
+            features = features.sort_values(ascending = False)
+            st.write(features)
+        #sort_index = numpy.argsort(vals)
 
+        new_groups = st.multiselect('Groups associated with game to predict rating for:', np.sort(x.columns))
+        x_new = [[1 if group in new_groups else 0 for group in x.columns]]
+        y = model.predict(x_new)
+        st.write(f'Predicted rating = {y[0]}')
 
 #####################################################Exploratory plots
 
