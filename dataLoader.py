@@ -121,7 +121,6 @@ def processResults(data, overall_only = False):
     tmp_data = tmp_data.explode('Winner')
     overall_scores = tmp_data.groupby(['Game Title', 'Winner']).size().reset_index()
     overall_scores = overall_scores.pivot(columns = 'Winner', index = 'Game Title', values = 0)
-    st.write(overall_scores)
     overall_fraction = overall_scores.sum()/games_played.sum()
     #get game-specific results
     scores_dict['Game'] = overall_scores
@@ -181,9 +180,8 @@ def processResults(data, overall_only = False):
     
 def getDictionaries(key, col, overall_scores, games_played, overall_fraction):
     scores = st.session_state[key].merge(overall_scores, on = 'Game Title').groupby(col).sum()
-    st.write(scores)
+    scores = scores.drop('Game Title', axis = 1)
     gplayed = st.session_state[key].merge(games_played, left_on = 'Game Title', right_index = True).groupby(col).sum()['Number of Plays']
-    st.write(gplayed)
     fraction = getFraction(scores, gplayed)
     pae = getPercentageAboveExpected(fraction, overall_fraction)
     return scores, gplayed, fraction, pae
