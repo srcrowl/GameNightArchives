@@ -189,7 +189,7 @@ def getDictionaries(key, col, overall_scores, games_played, overall_fraction):
 def getFraction(scores, games_played):
     fraction = scores.copy()
     for col in fraction.columns:
-        fraction[col] = fraction[col]/games_played
+        fraction[col] = float(fraction[col])/games_played
     return fraction
     
 def getPercentageAboveExpected(fraction, overall_fraction):
