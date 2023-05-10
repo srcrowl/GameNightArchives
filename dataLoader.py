@@ -20,7 +20,7 @@ def loadData_results():
     return results
     
 def processCategories(data, category_type = 'Game Type'):
-    data = data.dropna(subset = category_type)
+    data = data.dropna(subset = category_type).copy()
     if data[category_type].dtypes != str:
         data[category_type] = data[category_type].astype(str)
     data[category_type] = data[category_type].apply(lambda x: x.split(','))

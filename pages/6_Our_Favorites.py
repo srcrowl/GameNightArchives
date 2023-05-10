@@ -204,7 +204,7 @@ consensus_grouped = consensus.reset_index().merge(st.session_state[group], right
 group_sizes = consensus_grouped.size()
 min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'all_least')
 games_to_include = group_sizes[group_sizes >= min_games].index
-mean_ratings = consensus_grouped.mean().squeeze()[games_to_include]
+mean_ratings = consensus_grouped[0].mean().squeeze()[games_to_include]
 sorting_ratings = mean_ratings.sort_values(ascending = True)
 ranked_list = ''
 for rank, game in zip(range(1,sorting_ratings.shape[0]+1), sorting_ratings.index):
