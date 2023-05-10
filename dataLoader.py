@@ -34,7 +34,6 @@ def loadData_categories():
     sheets_query = runQuery(st.secrets['category_url'])
     results = pd.DataFrame(sheets_query, columns = ['Data of Entry', 'Game Title', 'Owner', 'Format', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism', 'BGG Rating', 'BGG Weight', 'Primary Classification', 'Team Size', 'Game Length', 'Win Condition', 'Luck Score'])
     st.session_state['Categories'] = results.copy()
-    st.write(results)
     
     #establish owner dataframe
     st.session_state['Owner'] = results[['Game Title', 'Owner']]
@@ -122,7 +121,7 @@ def processResults(data, overall_only = False):
     tmp_data = tmp_data.explode('Winner')
     overall_scores = tmp_data.groupby(['Game Title', 'Winner']).size().reset_index()
     overall_scores = overall_scores.pivot(columns = 'Winner', index = 'Game Title', values = 0)
-    
+    st.write(overall_scores)
     overall_fraction = overall_scores.sum()/games_played.sum()
     #get game-specific results
     scores_dict['Game'] = overall_scores
@@ -182,7 +181,9 @@ def processResults(data, overall_only = False):
     
 def getDictionaries(key, col, overall_scores, games_played, overall_fraction):
     scores = st.session_state[key].merge(overall_scores, on = 'Game Title').groupby(col).sum()
+    st.write(scores)
     gplayed = st.session_state[key].merge(games_played, left_on = 'Game Title', right_index = True).groupby(col).sum()['Number of Plays']
+    st.write(gplayed)
     fraction = getFraction(scores, gplayed)
     pae = getPercentageAboveExpected(fraction, overall_fraction)
     return scores, gplayed, fraction, pae
