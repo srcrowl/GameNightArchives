@@ -188,7 +188,6 @@ def getDictionaries(key, col, overall_scores, games_played, overall_fraction):
     
 def getFraction(scores, games_played):
     fraction = scores.copy()
-    st.write(fraction)
     for col in fraction.columns:
         fraction[col] = fraction[col].astype(float)/games_played
     return fraction
