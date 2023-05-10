@@ -34,6 +34,7 @@ def loadData_categories():
     sheets_query = runQuery(st.secrets['category_url'])
     results = pd.DataFrame(sheets_query, columns = ['Data of Entry', 'Game Title', 'Owner', 'Format', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism', 'BGG Rating', 'BGG Weight', 'Primary Classification', 'Team Size', 'Game Length', 'Win Condition', 'Luck Score'])
     st.session_state['Categories'] = results.copy()
+    st.write(results)
     
     #establish owner dataframe
     st.session_state['Owner'] = results[['Game Title', 'Owner']]
@@ -188,6 +189,7 @@ def getDictionaries(key, col, overall_scores, games_played, overall_fraction):
     
 def getFraction(scores, games_played):
     fraction = scores.copy()
+    st.write(fraction)
     for col in fraction.columns:
         fraction[col] = fraction[col].astype(float)/games_played
     return fraction
