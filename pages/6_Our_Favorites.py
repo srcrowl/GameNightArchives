@@ -241,7 +241,9 @@ cols[0].write(ranked_list)
 
 #rank by category
 group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Team Size', 'Game Length', 'Primary Classification', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Individual Favorite')
-y_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index').groupby(group)
+y_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index')
+y_grouped = y_grouped.drop(['Game Title','index'], axis = 1)
+y_grouped = y_grouped.groupby(group)
 group_sizes = y_grouped.size()
 min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'player_most')
 games_to_include = group_sizes[group_sizes >= min_games].index
@@ -275,7 +277,9 @@ cols[0].write(ranked_list)
 
 #rank by category
 group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Team Size', 'Game Length', 'Primary Classification', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Individual Least Favorite')
-y_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index').groupby(group)
+y_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index')
+y_grouped = y_grouped.drop(['Game Title','index'], axis = 1)
+y_grouped = y_grouped.groupby(group)
 group_sizes = y_grouped.size()
 min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'player_least')
 games_to_include = group_sizes[group_sizes >= min_games].index
