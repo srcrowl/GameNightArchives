@@ -146,236 +146,178 @@ if gamenight_only:
     ratings = ratings.loc[games_played]
 if allrated_only:
     ratings = ratings.dropna()
-st.header('Consensus Preferences')
-st.subheader('Favorites')
-consensus = ratings.mean(axis = 1)
-cols = st.columns(2)
-sorting_ratings = consensus.sort_values(ascending = False)
-ranked_list = ''
-for rank, game in zip(range(1,sorting_ratings.shape[0]), sorting_ratings.index):
-    if rank > 10 and prev_rating > sorting_ratings.loc[game]:
-        break
-    else:
-        ranked_list = ranked_list + f'{rank}. {game} ({round(sorting_ratings.loc[game],2)})\n'
-    prev_rating = sorting_ratings.loc[game]
+st.header('Preferences')
+player = st.selectbox('Rater:', ['All'] + list(ratings.columns), key = 'player')
 
-#games ranked list
-cols[0].write('Games:')
-cols[0].write(ranked_list)
+#make a tab for favorite and least favorite
+if player == 'All':
+    t1, t2 = st.tabs(['Favorites', 'Least Favorites'])
+else:
+    t1, t2, t3 = st.tabs(['Favorites', 'Least Favorites', 'Predict Ratings'])
 
-
-#rank by category
-group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Team Size', 'Game Length', 'Primary Classification', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'])
-consensus_grouped = consensus.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index').groupby(group)
-group_sizes = consensus_grouped.size()
-min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'all_most') 
-games_to_include = group_sizes[group_sizes >= min_games].index
-mean_ratings = consensus_grouped[0].mean()[games_to_include]
-sorting_ratings = mean_ratings.sort_values(ascending = False)
-ranked_list = ''
-for rank, game in zip(range(1,sorting_ratings.shape[0]+1), sorting_ratings.index):
-    if rank > 10 and prev_rating > sorting_ratings.loc[game]:
-        break
-    else:
-        ranked_list = ranked_list + f'{rank}. {game} = {round(sorting_ratings.loc[game], 2)} ({group_sizes[game]} games)\n'
-    prev_rating = sorting_ratings.loc[game]
-cols[1].write(ranked_list)
+if player == 'All':
+    y = ratings.mean(axis = 1)
+    y.name = 'Rating'
+else:
+    y = ratings[player].dropna().squeeze()
+    y.name = 'Rating'
 
 
-st.subheader(f"Least Favorites")
-cols = st.columns(2)
-sorting_ratings = consensus.sort_values(ascending = True)
-ranked_list = ''
-for rank, game in zip(range(1,sorting_ratings.shape[0]), sorting_ratings.index):
-    if rank > 10 and prev_rating < sorting_ratings.loc[game]:
-        break
-    else:
-        ranked_list = ranked_list + f'{rank}. {game} = {round(sorting_ratings.loc[game],2)}\n'
-    prev_rating = sorting_ratings.loc[game]
+with t1:
+    cols = st.columns(2)
+    sorting_ratings = y.sort_values(ascending = False)
+    ranked_list = ''
+    for rank, game in zip(range(1,sorting_ratings.shape[0]), sorting_ratings.index):
+        if rank > 10 and prev_rating > sorting_ratings.loc[game]:
+            break
+        else:
+            ranked_list = ranked_list + f'{rank}. {game} ({round(sorting_ratings.loc[game],2)})\n'
+        prev_rating = sorting_ratings.loc[game]
 
-#games ranked list
-cols[0].write('Games:')
-cols[0].write(ranked_list)
+    #games ranked list
+    cols[0].write('Games:')
+    cols[0].write(ranked_list)
 
 
-#rank by category
-group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Team Size', 'Game Length', 'Primary Classification', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Least Favorite')
-consensus_grouped = consensus.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index').groupby(group)
-group_sizes = consensus_grouped.size()
-min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'all_least')
-games_to_include = group_sizes[group_sizes >= min_games].index
-mean_ratings = consensus_grouped[0].mean().squeeze()[games_to_include]
-sorting_ratings = mean_ratings.sort_values(ascending = True)
-ranked_list = ''
-for rank, game in zip(range(1,sorting_ratings.shape[0]+1), sorting_ratings.index):
-    if rank > 10 and prev_rating < sorting_ratings.loc[game]:
-        break
-    else:
-        ranked_list = ranked_list + f'{rank}. {game} = {round(sorting_ratings.loc[game], 2)} ({group_sizes[game]} games)\n'
-    prev_rating = sorting_ratings.loc[game]
-cols[1].write(ranked_list)
-st.write('\n\n\n\n')
-st.header('Individual Favorites')
-player = st.selectbox('Player',['Sam', 'Gabi', 'Reagan'])
+    #rank by category
+    group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Team Size', 'Game Length', 'Primary Classification', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'favorite_select')
+    consensus_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index')
+    consensus_grouped = consensus_grouped[['Rating',group]].groupby(group)
+    group_sizes = consensus_grouped.size()
+    min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'all_most') 
+    games_to_include = group_sizes[group_sizes >= min_games].index.values
+    mean_ratings = consensus_grouped.mean().squeeze()[games_to_include]
+    sorting_ratings = mean_ratings.sort_values(ascending = False)
+    ranked_list = ''
+    for rank, game in zip(range(1,sorting_ratings.shape[0]+1), sorting_ratings.index):
+        if rank > 10 and prev_rating > sorting_ratings.loc[game]:
+            break
+        else:
+            ranked_list = ranked_list + f'{rank}. {game} = {round(sorting_ratings.loc[game], 2)} ({group_sizes[game]} games)\n'
+        prev_rating = sorting_ratings.loc[game]
+    cols[1].write(ranked_list)
 
 
 
-#y = fraction_dict['Game'][player]
-y = ratings[player].dropna()
-#favorite games
-st.subheader(f"{player}'s Favorites")
-cols = st.columns(2)
-sorting_ratings = y.sort_values(ascending = False)
-ranked_list = ''
-for rank, game in zip(range(1,sorting_ratings.shape[0]), sorting_ratings.index):
-    if rank > 10 and prev_rating > sorting_ratings.loc[game]:
-        break
-    else:
-        ranked_list = ranked_list + f'{rank}. {game} ({round(sorting_ratings.loc[game], 2)})\n'
-    prev_rating = sorting_ratings.loc[game]
+with t2:
+    cols = st.columns(2)
+    sorting_ratings = y.sort_values(ascending = True)
+    ranked_list = ''
+    for rank, game in zip(range(1,sorting_ratings.shape[0]), sorting_ratings.index):
+        if rank > 10 and prev_rating < sorting_ratings.loc[game]:
+            break
+        else:
+            ranked_list = ranked_list + f'{rank}. {game} = {round(sorting_ratings.loc[game],2)}\n'
+        prev_rating = sorting_ratings.loc[game]
 
-#games ranked list
-cols[0].write('Games:')
-cols[0].write(ranked_list)
+    #games ranked list
+    cols[0].write('Games:')
+    cols[0].write(ranked_list)
 
 
-#rank by category
-group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Team Size', 'Game Length', 'Primary Classification', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Individual Favorite')
-y_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index')
-y_grouped = y_grouped.drop(['Game Title','index'], axis = 1)
-y_grouped = y_grouped.groupby(group)
-group_sizes = y_grouped.size()
-min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'player_most')
-games_to_include = group_sizes[group_sizes >= min_games].index
-mean_ratings = y_grouped.mean().squeeze()[games_to_include]
-sorting_ratings = mean_ratings.sort_values(ascending = False)
-ranked_list = ''
-for rank, game in zip(range(1,sorting_ratings.shape[0]+1), sorting_ratings.index):
-    if rank > 10 and prev_rating > sorting_ratings.loc[game]:
-        break
-    else:
-        ranked_list = ranked_list + f'{rank}. {game} = {round(sorting_ratings.loc[game], 2)} ({group_sizes[game]} games)\n'
-    prev_rating = sorting_ratings.loc[game]
-cols[1].write(ranked_list)
+    #rank by category
+    group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Team Size', 'Game Length', 'Primary Classification', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Least Favorite')
+    consensus_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index')
+    consensus_grouped = consensus_grouped[['Rating',group]].groupby(group)
+    group_sizes = consensus_grouped.size()
+    min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'all_most2') 
+    games_to_include = group_sizes[group_sizes >= min_games].index.values
+    mean_ratings = consensus_grouped.mean().squeeze()[games_to_include]
+    sorting_ratings = mean_ratings.sort_values(ascending = True)
+    ranked_list = ''
+    for rank, game in zip(range(1,sorting_ratings.shape[0]+1), sorting_ratings.index):
+        if rank > 10 and prev_rating < sorting_ratings.loc[game]:
+            break
+        else:
+            ranked_list = ranked_list + f'{rank}. {game} = {round(sorting_ratings.loc[game], 2)} ({group_sizes[game]} games)\n'
+        prev_rating = sorting_ratings.loc[game]
+    cols[1].write(ranked_list)
 
 
-st.subheader(f"{player}'s Least Favorites")
-cols = st.columns(2)
-sorting_ratings = y.sort_values(ascending = True)
-ranked_list = ''
-for rank, game in zip(range(1,sorting_ratings.shape[0]), sorting_ratings.index):
-    if rank > 10 and prev_rating < sorting_ratings.loc[game]:
-        break
-    else:
-        ranked_list = ranked_list + f'{rank}. {game} ({sorting_ratings.loc[game]})\n'
-    prev_rating = sorting_ratings.loc[game]
+if player != 'All':
+    with t3:
+        st.subheader(f"Predict {player}'s Rating")
+        #decide which categories to include
+        cols = st.columns(4)
+        use_owner = cols[0].checkbox('Game Owner', value = True)
+        use_format = cols[1].checkbox('Game Format', value = True)
+        use_team = cols[2].checkbox('Team Size', value = False)
+        use_length = cols[3].checkbox('Game Length', value = True)
+        cols = st.columns(3)
+        use_class = cols[0].checkbox('Primary Classification', value = True)
+        use_type = cols[1].checkbox("Sam's Mechanisms", value = True)
+        use_theme = cols[2].checkbox("Game Theme", value = True)
+        cols = st.columns(3)
+        use_bggtype = cols[0].checkbox('BGG Type', value = True)
+        use_bggcat = cols[1].checkbox('BGG Category', value = True)
+        use_bggmech = cols[2].checkbox('BGG Mechanism', value = True)
+        use_list = [use_owner, use_format,use_team, use_length, use_class, use_type, use_theme, use_bggtype, use_bggcat, use_bggmech]
 
-#games ranked list
-cols[0].write('Games:')
-cols[0].write(ranked_list)
-
-
-#rank by category
-group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Team Size', 'Game Length', 'Primary Classification', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Individual Least Favorite')
-y_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index')
-y_grouped = y_grouped.drop(['Game Title','index'], axis = 1)
-y_grouped = y_grouped.groupby(group)
-group_sizes = y_grouped.size()
-min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'player_least')
-games_to_include = group_sizes[group_sizes >= min_games].index
-mean_ratings = y_grouped.mean().squeeze()[games_to_include]
-sorting_ratings = mean_ratings.sort_values(ascending = True)
-ranked_list = ''
-for rank, game in zip(range(1,sorting_ratings.shape[0]+1), sorting_ratings.index):
-    if rank > 10 and prev_rating < sorting_ratings.loc[game]:
-        break
-    else:
-        ranked_list = ranked_list + f'{rank}. {game} = {round(sorting_ratings.loc[game], 2)} ({group_sizes[game]} games)\n'
-    prev_rating = sorting_ratings.loc[game]
-cols[1].write(ranked_list)
-
-st.subheader(f"Predict {player}'s Rating")
-#decide which categories to include
-cols = st.columns(4)
-use_owner = cols[0].checkbox('Game Owner', value = True)
-use_format = cols[1].checkbox('Game Format', value = True)
-use_team = cols[2].checkbox('Team Size', value = False)
-use_length = cols[3].checkbox('Game Length', value = True)
-cols = st.columns(3)
-use_class = cols[0].checkbox('Primary Classification', value = True)
-use_type = cols[1].checkbox("Sam's Mechanisms", value = True)
-use_theme = cols[2].checkbox("Game Theme", value = True)
-cols = st.columns(3)
-use_bggtype = cols[0].checkbox('BGG Type', value = True)
-use_bggcat = cols[1].checkbox('BGG Category', value = True)
-use_bggmech = cols[2].checkbox('BGG Mechanism', value = True)
-use_list = [use_owner, use_format,use_team, use_length, use_class, use_type, use_theme, use_bggtype, use_bggcat, use_bggmech]
-
-min_games = st.slider('Minimum number of games required for category to be included:', min_value = 1, max_value = 10, value = 0)
-model = st.radio('Model:', ['Random Forest', 'Ridge Regression'], horizontal = True)
+        min_games = st.slider('Minimum number of games required for category to be included:', min_value = 1, max_value = 10, value = 0)
+        model = st.radio('Model:', ['Random Forest', 'Ridge Regression'], horizontal = True)
 
 
-groupings = generateGroupings(use_list)
-sizes = groupings.groupby('Category').size()
-groups_to_keep = sizes[sizes >= min_games].index
-groupings = groupings[groupings['Category'].isin(groups_to_keep)]
-x = constructInputs(groupings, y)
-if model == 'Ridge Regression':
-    show_alpha = st.checkbox('Show Impact of Alpha', key = 'plot_alpha')
-    #show impact of alpha
-    if show_alpha:
-        fig = plotAlphaChange(x,y)
-        st.pyplot(fig)
-    alpha = st.slider('Regularization Parameter', min_value = 0.00, max_value = 3.0, value = 1.0, step = 0.1)
-    generate_model = st.checkbox('Build Model From Current Data', value = False, key = 'model_generation')
-    if generate_model:
-        #if it hasn't already been done, construct necessary groupings and x 
-        if not show_alpha:
-            groupings = generateGroupings(use_list)
-            sizes = groupings.groupby('Category').size()
-            groups_to_keep = sizes[sizes >= min_games].index
-            groupings = groupings[groupings['Category'].isin(groups_to_keep)]
-            x = constructInputs(groupings, ratings)
-        model = Ridge(alpha = alpha)
-        model.fit(x, y)
-        score = model.score(x,y)
-        st.text('\nModel Built')
-        st.markdown(f'$R^2=$:{score}')
-        
-        show_coef = st.checkbox('Show Model Coefficents')
-        #get most predictive categories
-        if show_coef:
-            coef = pd.Series(data = model.coef_, index = x.columns, name = 'Coefficients')
-            coef = coef.sort_values(ascending = False)
-            st.write(coef)
-        #sort_index = numpy.argsort(vals)
+        groupings = generateGroupings(use_list)
+        sizes = groupings.groupby('Category').size()
+        groups_to_keep = sizes[sizes >= min_games].index
+        groupings = groupings[groupings['Category'].isin(groups_to_keep)]
+        x = constructInputs(groupings, y)
+        if model == 'Ridge Regression':
+            show_alpha = st.checkbox('Show Impact of Alpha', key = 'plot_alpha')
+            #show impact of alpha
+            if show_alpha:
+                fig = plotAlphaChange(x,y)
+                st.pyplot(fig)
+            alpha = st.slider('Regularization Parameter', min_value = 0.00, max_value = 3.0, value = 1.0, step = 0.1)
+            generate_model = st.checkbox('Build Model From Current Data', value = False, key = 'model_generation')
+            if generate_model:
+                #if it hasn't already been done, construct necessary groupings and x 
+                if not show_alpha:
+                    groupings = generateGroupings(use_list)
+                    sizes = groupings.groupby('Category').size()
+                    groups_to_keep = sizes[sizes >= min_games].index
+                    groupings = groupings[groupings['Category'].isin(groups_to_keep)]
+                    x = constructInputs(groupings, ratings)
+                model = Ridge(alpha = alpha)
+                model.fit(x, y)
+                score = model.score(x,y)
+                st.text('\nModel Built')
+                st.markdown(f'$R^2=$:{score}')
+                
+                show_coef = st.checkbox('Show Model Coefficents')
+                #get most predictive categories
+                if show_coef:
+                    coef = pd.Series(data = model.coef_, index = x.columns, name = 'Coefficients')
+                    coef = coef.sort_values(ascending = False)
+                    st.write(coef)
+                #sort_index = numpy.argsort(vals)
 
-        new_groups = st.multiselect('Groups associated with game to predict rating for:', np.sort(x.columns))
-        x_new = [[1 if group in new_groups else 0 for group in x.columns]]
-        y = model.predict(x_new)
-        st.write(f'Predicted rating = {y[0]}')
-elif model == 'Random Forest':
-    generate_model = st.checkbox('Build Model From Current Data', value = False, key = 'model_generation')
-    if generate_model:
-        n_trees = 500
-        model = RandomForestRegressor(n_estimators = n_trees)
-        model.fit(x, y)
-        score = model.score(x,y)
-        st.text('\nModel Built')
-        st.markdown(f'$R^2=$:{score}')
-        
-        show_features = st.checkbox('Show Feature Importance')
-        #get most predictive categories
-        if show_features:
-            features = pd.Series(data = model.feature_importances_, index = x.columns, name = 'Feature Importance')
-            features = features.sort_values(ascending = False)
-            st.write(features)
-        #sort_index = numpy.argsort(vals)
+                new_groups = st.multiselect('Groups associated with game to predict rating for:', np.sort(x.columns))
+                x_new = [[1 if group in new_groups else 0 for group in x.columns]]
+                y = model.predict(x_new)
+                st.write(f'Predicted rating = {y[0]}')
+        elif model == 'Random Forest':
+            generate_model = st.checkbox('Build Model From Current Data', value = False, key = 'model_generation')
+            if generate_model:
+                n_trees = 500
+                model = RandomForestRegressor(n_estimators = n_trees)
+                model.fit(x, y)
+                score = model.score(x,y)
+                st.text('\nModel Built')
+                st.markdown(f'$R^2=$:{score}')
+                
+                show_features = st.checkbox('Show Feature Importance')
+                #get most predictive categories
+                if show_features:
+                    features = pd.Series(data = model.feature_importances_, index = x.columns, name = 'Feature Importance')
+                    features = features.sort_values(ascending = False)
+                    st.write(features)
+                #sort_index = numpy.argsort(vals)
 
-        new_groups = st.multiselect('Groups associated with game to predict rating for:', np.sort(x.columns))
-        x_new = [[1 if group in new_groups else 0 for group in x.columns]]
-        y = model.predict(x_new)
-        st.write(f'Predicted rating = {y[0]}')
+                new_groups = st.multiselect('Groups associated with game to predict rating for:', np.sort(x.columns))
+                x_new = [[1 if group in new_groups else 0 for group in x.columns]]
+                y = model.predict(x_new)
+                st.write(f'Predicted rating = {y[0]}')
 
 #####################################################Exploratory plots
 
