@@ -138,7 +138,7 @@ coop_games = ['Forbidden Desert', 'The Initiative', 'Horrified', 'Hanabi', 'Arkh
 st.title('Summary of Our Ratings')
 gamenight_only = st.checkbox('Restrict ratings to those played during game night', value = True)
 allrated_only = st.checkbox('Restrict ratings to games that everyone has rated', value = True)
-scores_dict, gplayed_dict, fraction_dict, pae_dict = processResults(st.session_state['Full Data'])
+scores_dict, gplayed_dict, fraction_dict, pae_dict, par_dict = processResults(st.session_state['Full Data'])
 overall_fraction = scores_dict['Game'].sum()/gplayed_dict['Game'].sum()
 ratings = st.session_state['Ratings'].copy()
 if gamenight_only:

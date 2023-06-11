@@ -18,7 +18,7 @@ st.header('Building a Naive Bayes Classifier')
 min_games = st.slider('Minimum number of games required for category to be included:', min_value = 0, max_value = 50, value = 5)
 smoothing = st.slider('Smoothing parameter value:', min_value = 0.0, max_value = 1.0, value = 1.0)
 #load data
-scores_dict, gplayed_dict, fraction_dict, pae_dict = processResults(st.session_state['Full Data'])
+scores_dict, gplayed_dict, fraction_dict, pae_dict, par_dict = processResults(st.session_state['Full Data'])
 owner_list = gplayed_dict['Owner'][gplayed_dict['Owner'] >= min_games].index.values
 length_list = gplayed_dict['Game Length'][gplayed_dict['Game Length'] >= min_games].index.values
 team_list = gplayed_dict["Team Size"][gplayed_dict["Team Size"] >= min_games].index.values

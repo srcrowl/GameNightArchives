@@ -20,7 +20,7 @@ st.title(f'Game Night Statistics ({semester})')
 
 #load data
 full_data = st.session_state['Full Data'][st.session_state['Full Data']['Semester'] == semester]
-scores_dict, gplayed_dict, fraction_dict, pae_dict = processResults(full_data)
+scores_dict, gplayed_dict, fraction_dict, pae_dict, par_dict = processResults(full_data)
 overall_fraction = scores_dict['Game'].sum()/gplayed_dict['Game'].sum()
 
 

@@ -19,12 +19,12 @@ if 'Rating' not in st.session_state:
 st.title('Game Night Statistics')
 
 #load data
-scores_dict, gplayed_dict, fraction_dict, pae_dict = processResults(st.session_state['Full Data'])
+scores_dict, gplayed_dict, fraction_dict, pae_dict, par_dict = processResults(st.session_state['Full Data'])
 overall_fraction = scores_dict['Game'].sum()/gplayed_dict['Game'].sum()
 
 #load data minus the last 15 games
 past_data = st.session_state['Full Data'].iloc[0:-15]
-past_scores, past_gplayed, past_fraction, past_pae = processResults(past_data, overall_only = True)
+past_scores, past_gplayed, past_fraction, past_pae, past_par = processResults(past_data, overall_only = True)
 past_overall_fraction = past_scores['Game'].sum()/past_gplayed['Game'].sum()
 
 
@@ -65,8 +65,14 @@ with t2:
         fig = win_fraction_barplot(fraction, overall_fraction, games_played)
 
     else:
-        metric = st.radio('Metric:', ['Win Fraction', 'Fraction Above Expected'], horizontal = True)
-        fig = win_heatmap(fraction_dict, pae_dict, games = games_played.index, category = category, metric = metric)
+        metric = st.radio('Metric:', ['Win Fraction', 'Fraction Above Expected', 'Fraction Above Random'], horizontal = True)
+        if metric == 'Win Fraction':
+            plot_dict = fraction_dict
+        elif metric == 'Fraction Above Expected':
+            plot_dict = pae_dict
+        elif metric == 'Fraction Above Random':
+            plot_dict = par_dict
+        fig = win_heatmap(plot_dict, games = games_played.index, category = category, metric = metric)
 
     st.pyplot(fig)
 

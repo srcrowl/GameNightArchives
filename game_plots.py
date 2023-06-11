@@ -9,7 +9,8 @@ def win_fraction_barplot(fraction_by_game, overall_fraction, games_played):
 	for p in range(3):
 		name = fraction_by_game.columns[p]
 		ax[p].bar(fraction_by_game.index,fraction_by_game[name])
-		ax[p].axhline(overall_fraction[name], linestyle = 'dashed', color = 'red')
+		#ax[p].axhline(overall_fraction[name], linestyle = 'dashed', color = 'red')
+		ax[p].axhline(1/3, linestyle = 'dashed', color = 'red')
 		ax[p].set_ylabel('Win Fraction')
 		ax[p].set_ylim([0,1])
 		ticks = plt.xticks(rotation = 90)
@@ -21,21 +22,26 @@ def win_fraction_barplot(fraction_by_game, overall_fraction, games_played):
 	return fig
 	
 	
-def win_heatmap(fraction_dict, pae_dict, games = None, category = 'Game', metric = 'Win Fraction'):
+def win_heatmap(plot_dict, games = None, category = 'Game', metric = 'Win Fraction'):
 	if category == 'Game':
 		fig = plt.figure(figsize = (2,6))
 	else:
 		fig = plt.figure(figsize = (2,6))
 		
 	if metric == 'Win Fraction':
-		fraction = fraction_dict[category].loc[games, ['Sam','Gabi','Reagan']]
+		fraction = plot_dict[category].loc[games, ['Sam','Gabi','Reagan']]
 		cmap = 'Reds'
 		vmin = 0
 		vmax = 1
 		label = 'Win Fraction'
-	else:
-
-		fraction = pae_dict[category].loc[games, ['Sam','Gabi','Reagan']]
+	elif metric == 'Fraction Above Expected':
+		fraction = plot_dict[category].loc[games, ['Sam','Gabi','Reagan']]
+		cmap = 'coolwarm'
+		vmin = -1
+		vmax = 1
+		label = 'Fraction Above Expected'
+	elif metric == 'Fraction Above Random':
+		fraction = plot_dict[category].loc[games, ['Sam','Gabi','Reagan']]
 		cmap = 'coolwarm'
 		vmin = -1
 		vmax = 1
