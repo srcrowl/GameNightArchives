@@ -21,7 +21,7 @@ st.title(f'Game Night Statistics ({current_semester})')
 
 #load data
 full_data = st.session_state['Full Data'][st.session_state['Full Data']['Semester'] == current_semester]
-scores_dict, gplayed_dict, fraction_dict, pae_dict = processResults(full_data)
+scores_dict, gplayed_dict, fraction_dict, pae_dict, par_dict = processResults(full_data)
 overall_fraction = scores_dict['Game'].sum()/gplayed_dict['Game'].sum()
 
 #load data minus the last 15 games
@@ -67,7 +67,13 @@ with t2:
 
     else:
         metric = st.radio('Metric:', ['Win Fraction', 'Fraction Above Expected'], horizontal = True)
-        fig = win_heatmap(fraction_dict, pae_dict, games = games_played.index, category = category, metric = metric)
+        if metric == 'Win Fraction':
+            plot_dict = fraction_dict
+        elif metric == 'Fraction Above Expected':
+            plot_dict = pae_dict
+        elif metric == 'Fraction Above Random':
+            plot_dict = par_dict
+        fig = win_heatmap(plot_dict, games = games_played.index, category = category, metric = metric)
 
     st.pyplot(fig)
 
