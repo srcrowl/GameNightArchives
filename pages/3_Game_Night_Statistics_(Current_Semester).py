@@ -27,8 +27,12 @@ overall_fraction = scores_dict['Game'].sum()/gplayed_dict['Game'].sum()
 #load data minus the last 15 games
 most_recent_date = full_data['Date'].unique()[:-1]
 past_data = full_data[full_data['Date'].isin(most_recent_date)]
-past_scores, past_gplayed, past_fraction, past_pae, par_dict = processResults(past_data, overall_only = True)
-past_overall_fraction = past_scores['Game'].sum()/past_gplayed['Game'].sum()
+if past_data.shape[0] == 0:
+    prev_data = False
+else:
+    prev_data = True
+    past_scores, past_gplayed, past_fraction, past_pae, par_dict = processResults(past_data, overall_only = True)
+    past_overall_fraction = past_scores['Game'].sum()/past_gplayed['Game'].sum()
 
 #Set up tabs for each major category
 t1, t2, t3 = st.tabs(['Overall Stats', 'Breaking Down By Games', 'Tracking Progress Over Time'])
@@ -37,16 +41,24 @@ with t1:
     st.header('Number of Wins')
     col1, col2, col3 = st.columns(3)
     current_wins = scores_dict['Game'].sum()
-    past_wins = past_scores['Game'].sum()
+    if prev_data:
+        past_wins = past_scores['Game'].sum()
+    else:
+        past_wins = pd.Series([0,0,0], index = ['Sam', 'Gabi', 'Reagan'])
+
     col1.metric("Sam", current_wins['Sam'], f"{current_wins['Sam'] - past_wins['Sam']}")
     col2.metric("Gabi", current_wins['Gabi'], f"{current_wins['Gabi'] - past_wins['Gabi']}")
     col3.metric("Reagan", current_wins['Reagan'], f"{current_wins['Reagan'] - past_wins['Reagan']}")
 
+    if prev_data:
+        past_overall_fraction = past_scores['Game'].sum()
+    else:
+        past_overall_fraction = pd.Series([0,0,0], index = ['Sam', 'Gabi', 'Reagan'])
     st.header('Win Percentages')
     col1, col2, col3 = st.columns(3)
-    col1.metric("Sam", f"{round(overall_fraction['Sam']*100,2)}%", f"{round((overall_fraction['Sam'] - past_overall_fraction['Sam'])*100, 2)}%")
-    col2.metric("Gabi", f"{round(overall_fraction['Gabi']*100,2)}%", f"{round((overall_fraction['Gabi'] - past_overall_fraction['Gabi'])*100, 2)}%")
-    col3.metric("Reagan", f"{round(overall_fraction['Reagan']*100,2)}%", f"{round((overall_fraction['Reagan'] - past_overall_fraction['Reagan'])*100, 2)}%")
+    col1.metric("Sam", f"{round(overall_fraction.loc['Sam']*100,2)}%", f"{round((overall_fraction.loc['Sam'] - past_overall_fraction.loc['Sam'])*100, 2)}%")
+    col2.metric("Gabi", f"{round(overall_fraction.loc['Gabi']*100,2)}%", f"{round((overall_fraction.loc['Gabi'] - past_overall_fraction.loc['Gabi'])*100, 2)}%")
+    col3.metric("Reagan", f"{round(overall_fraction.loc['Reagan']*100,2)}%", f"{round((overall_fraction.loc['Reagan'] - past_overall_fraction.loc['Reagan'])*100, 2)}%")
 
 
 
