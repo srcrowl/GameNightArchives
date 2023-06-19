@@ -27,7 +27,7 @@ overall_fraction = scores_dict['Game'].sum()/gplayed_dict['Game'].sum()
 #load data minus the last 15 games
 most_recent_date = full_data['Date'].unique()[:-1]
 past_data = full_data[full_data['Date'].isin(most_recent_date)]
-past_scores, past_gplayed, past_fraction, past_pae = processResults(past_data, overall_only = True)
+past_scores, past_gplayed, past_fraction, past_pae, par_dict = processResults(past_data, overall_only = True)
 past_overall_fraction = past_scores['Game'].sum()/past_gplayed['Game'].sum()
 
 #Set up tabs for each major category
