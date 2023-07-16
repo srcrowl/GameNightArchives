@@ -3,3 +3,5 @@ seaborn==0.12.2
 shillelagh==1.1.5
 shillelagh[gsheetsapi]
 scikit-learn
+hydraulit-components
+

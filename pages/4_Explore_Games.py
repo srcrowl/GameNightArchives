@@ -5,8 +5,11 @@ from cycler import cycler
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import seaborn as sns
+import hydralit_components as hc
 from dataLoader import loadData_ratings, processResults, loadData_categories, loadData_results
 
+
+st.set_page_config(layout='wide')
 if 'Full Data' not in st.session_state:
     st.session_state['Full Data'] = loadData_results()
     
@@ -16,22 +19,7 @@ if 'Type' not in st.session_state:
 if 'Rating' not in st.session_state:
     st.session_state['Ratings'] = loadData_ratings()
 
-#st.write(mpl.rcParams.keys())
-#mpl.rcParams['axes.edgecolor'] = 'white'
-#mpl.rcParams['axes.labelcolor'] = 'white'
-#mpl.rcParams['axes.facecolor'] = 'white'
-#mpl.rcParams['axes.prop_cycle'] = cycler('color', ['#001C7F', '#017517', '#8C0900', '#7600A1', '#B8860B', '#006374'])
-#mpl.rcParams['grid.color'] = 'white'
-#mpl.rcParams['xtick.color'] = 'white'
-#mpl.rcParams['ytick.color'] = 'white'
-#mpl.rcParams['axes.grid'] = False
-#mpl.rcParams['savefig.transparent'] = False
-#mpl.rcParams['savefig.edgecolor'] = 'white'
-#mpl.rcParams['lines.color'] = 'white'
-#mpl.rcParams['patch.edgecolor'] = 'gray'
-#mpl.rcParams['axes.titlecolor'] = 'white'
-#mpl.rcParams['figure.edgecolor'] = 'white'
-#mpl.rcParams['legend.facecolor'] = 'white'
+st.title("Explore the Games We've Played")
 
 
 type_to_explore = st.radio('Explore:', ['Game', 'Category'], horizontal = True)
@@ -59,24 +47,16 @@ if type_to_explore == 'Game':
     else:
         most_wins_player = person_winner.index.values[0]
         
-    #if games_with_scores.shape[0] > 0:
-    #    cols = st.columns(3)
-    #    cols[0].metric('Number of Times Played', game_data.shape[0], delta = None)
-    #    cols[1].metric('Person with Most Wins', f'{most_wins_player} ({most_wins})', delta = None)
-    #    golf_games = ['Blokus', 'Hearts']
-    #    if game_to_explore in golf_games:
-    #        index_best_score = games_with_scores['Score'].idxmin()
-    #    else:
-    #        index_best_score = games_with_scores['Score'].idxmax()
-    #    best_score = games_with_scores.loc[index_best_score, 'Score']
-    #    person_with_best_score = games_with_scores.loc[index_best_score, 'Player']
-    #    cols[2].metric('Best Score', f'{best_score} ({person_with_best_score})', delta = None)
-    #else:
-    #    cols = st.columns(2)
-    #    cols[0].metric('Number of Times Played', game_data.shape[0], delta = None)
-    #    cols[1].metric('Person with Most Wins', f'{most_wins_player} ({most_wins})', delta = None)
-    t1, t2, t3, t4 = st.tabs(['Summary Statistics', 'Game Ratings', 'Scores (If Applicable)', 'Game Classifications'])
-    with t1:
+
+
+    menu_data = [
+        {'label':"Summary Statistics"},
+        {'label':"Game Ratings"},
+        {'label': "Scores (If Applicable)"},
+        {'label':"Game Classifications"}
+    ]
+    menu = hc.nav_bar(menu_definition = menu_data, sticky_nav = True, sticky_mode = 'pinned')
+    if menu == 'Summary Statistics':
         st.header('Summary Statistics')
         cols = st.columns(2)
         cols[0].metric('Number of Times Played', game_data.shape[0], delta = None)
@@ -96,7 +76,7 @@ if type_to_explore == 'Game':
 
 
     #how the game is rated
-    with t2:
+    elif menu == 'Game Ratings':
         st.header('Game Ratings')
         st.subheader('Board Game Geek')
         cols = st.columns(2)
@@ -114,7 +94,7 @@ if type_to_explore == 'Game':
 
 
     #results from game
-    with t3:
+    elif menu == 'Scores (If Applicable)':
         if games_with_scores.shape[0] > 0:
             st.header('Scores')
             divy_by_player = st.checkbox('Break up by Player')
@@ -147,7 +127,7 @@ if type_to_explore == 'Game':
         
         
     #how game is classified
-    with t4:
+    if menu == 'Game Classifications':
         st.header('How the game is classified')
 
         st.markdown(f"**Person who owns the game:** {st.session_state['Owner'].loc[st.session_state['Owner']['Game Title'] == game_to_explore, 'Owner'].values[0]}")
@@ -191,16 +171,24 @@ else:
     
     cat_to_explore = st.selectbox('Category to Explore:', np.sort(category_data[category_type].unique()))
     category_data = category_data[category_data[category_type] == cat_to_explore]
-    t1, t2, t3 = st.tabs(['Summary Statistics', 'Game Ratings', 'Games in Category'])
-    with t3:
-        st.header('Games in Category')
-        
-        st.write(', '.join(np.sort(category_data['Game Title'].unique())))
-    with t1:
+    menu_data = [
+        {'label':"Summary Statistics"},
+        {'label':"Game Ratings"},
+        {'label':"Games in Category"}
+    ]
+    menu = hc.nav_bar(menu_definition = menu_data, sticky_nav = True, sticky_mode = 'pinned')
+    if menu == 'Summary Statistics':
         game_data = st.session_state['Full Data'].copy()
         game_data = game_data.merge(category_data, on = 'Game Title')
-        scores_dict, gplayed_dict, fraction_dict, pae_dict = processResults(game_data)
+        scores_dict, gplayed_dict, fraction_dict, pae_dict, par_dict = processResults(game_data)
+        scores = scores_dict['Game']
+        if 'Lionel' in scores.columns:
+            scores = scores.drop(columns = 'Lionel', axis = 1)
+        scores = scores.melt(ignore_index = False).reset_index()
+
+
         if scores_dict['Game'].shape[0] != 0:
+
             number_of_wins = scores_dict['Game'].sum()
             most_wins = int(np.max(number_of_wins.values))
             person_winner = number_of_wins[number_of_wins == most_wins].index.values
@@ -209,18 +197,31 @@ else:
             else:
                 most_wins_player = person_winner[0]
                 
+            #get most played game in category
+            gplayed = gplayed_dict['Game']
 
-            st.header('Summary Statistics')
+            #st.header('Summary Statistics')
             cols = st.columns(2)
+            st.write(gplayed.idxmax())
             cols[0].metric('Number of Times Played', game_data.shape[0], delta = None)
-            cols[1].metric('Person with Most Wins', f'{most_wins_player} ({most_wins})', delta = None)
+            cols[0].metric('Most Played Game in Category', f'{gplayed.idxmax()} ({gplayed.max()})', delta = None)
+            cols[0].metric('Person with Most Wins', f'{most_wins_player} ({most_wins})', delta = None)
             #cols[1].header('Person with Most Wins')
             #cols[2].header('Best Score')
 
+            #plots
+            fig = plt.figure()
+            sns.barplot(x = 'Game Title', y = 'value', hue = 'Winner', data = scores)
+            plt.xticks(rotation = 90)
+            plt.legend(ncols = 3)
+            plt.ylabel('Number of Wins')
+            plt.xlabel('')
+            cols[1].pyplot(fig)
+
 
     #how the game is rated
-    with t2:
-        st.header('Average Game Ratings')
+    elif menu == 'Game Ratings':
+        #st.header('Average Game Ratings')
         st.subheader('Board Game Geek')
         full_category_data = st.session_state['Categories'][st.session_state['Categories'][category_type] == cat_to_explore]
         cols = st.columns(2)
@@ -236,3 +237,7 @@ else:
         cols[0].metric("Sam's Rating", round(ratings['Sam'],2), delta = None)
         cols[1].metric("Gabi's Rating", round(ratings['Gabi'],2), delta = None)
         cols[2].metric("Reagan's Rating", round(ratings['Reagan'], 2), delta = None)
+
+    elif menu == 'Games in Category':
+        #st.header('Games in Category')
+        st.write(', '.join(np.sort(category_data['Game Title'].unique())))

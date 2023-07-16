@@ -6,6 +6,7 @@ from sklearn.linear_model import Ridge, Lasso
 from sklearn.ensemble import RandomForestRegressor
 from dataLoader import loadData_ratings, processResults, loadData_categories, loadData_results
 import matplotlib.pyplot as plt
+import hydralit_components as hc
 
 if 'Full Data' not in st.session_state:
     st.session_state['Full Data'] = loadData_results()
@@ -148,12 +149,23 @@ if allrated_only:
     ratings = ratings.dropna()
 st.header('Preferences')
 player = st.selectbox('Rater:', ['All'] + list(ratings.columns), key = 'player')
-
+group = st.selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Team Size', 'Game Length', 'Primary Classification', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'favorite_select')
+min_games = st.slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'all_most')
 #make a tab for favorite and least favorite
 if player == 'All':
-    t1, t2 = st.tabs(['Favorites', 'Least Favorites'])
+    menu_data = [
+        {'label':"Favorites"},
+        {'label':"Least Favorites"}
+    ]
+    menu = hc.nav_bar(menu_definition = menu_data, sticky_nav = True, sticky_mode = 'pinned')
 else:
-    t1, t2, t3 = st.tabs(['Favorites', 'Least Favorites', 'Predict Ratings'])
+    menu_data = [
+        {'label':"Favorites"},
+        {'label':"Least Favorites"},
+        {'label':"Predict Ratings"}
+    ]
+    menu = hc.nav_bar(menu_definition = menu_data, sticky_nav = True, sticky_mode = 'pinned')
+
 
 if player == 'All':
     y = ratings.mean(axis = 1)
@@ -161,9 +173,8 @@ if player == 'All':
 else:
     y = ratings[player].dropna().squeeze()
     y.name = 'Rating'
-
-
-with t1:
+ 
+if menu == 'Favorites':
     cols = st.columns(2)
     sorting_ratings = y.sort_values(ascending = False)
     ranked_list = ''
@@ -180,11 +191,11 @@ with t1:
 
 
     #rank by category
-    group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Team Size', 'Game Length', 'Primary Classification', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'favorite_select')
+    #group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Team Size', 'Game Length', 'Primary Classification', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'favorite_select')
     consensus_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index')
     consensus_grouped = consensus_grouped[['Rating',group]].groupby(group)
     group_sizes = consensus_grouped.size()
-    min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'all_most') 
+    #min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'all_most') 
     games_to_include = group_sizes[group_sizes >= min_games].index.values
     mean_ratings = consensus_grouped.mean().squeeze()[games_to_include]
     sorting_ratings = mean_ratings.sort_values(ascending = False)
@@ -195,11 +206,12 @@ with t1:
         else:
             ranked_list = ranked_list + f'{rank}. {game} = {round(sorting_ratings.loc[game], 2)} ({group_sizes[game]} games)\n'
         prev_rating = sorting_ratings.loc[game]
+    cols[1].write(f'Games by {group}:')
     cols[1].write(ranked_list)
 
 
 
-with t2:
+if menu == 'Least Favorites':
     cols = st.columns(2)
     sorting_ratings = y.sort_values(ascending = True)
     ranked_list = ''
@@ -216,11 +228,11 @@ with t2:
 
 
     #rank by category
-    group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Team Size', 'Game Length', 'Primary Classification', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Least Favorite')
+    #group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Team Size', 'Game Length', 'Primary Classification', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Least Favorite')
     consensus_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index')
     consensus_grouped = consensus_grouped[['Rating',group]].groupby(group)
     group_sizes = consensus_grouped.size()
-    min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'all_most2') 
+    #min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'all_most2') 
     games_to_include = group_sizes[group_sizes >= min_games].index.values
     mean_ratings = consensus_grouped.mean().squeeze()[games_to_include]
     sorting_ratings = mean_ratings.sort_values(ascending = True)
@@ -231,11 +243,12 @@ with t2:
         else:
             ranked_list = ranked_list + f'{rank}. {game} = {round(sorting_ratings.loc[game], 2)} ({group_sizes[game]} games)\n'
         prev_rating = sorting_ratings.loc[game]
+    cols[1].write(f'Games by {group}:')
     cols[1].write(ranked_list)
 
 
 if player != 'All':
-    with t3:
+    if menu == 'Predict Ratings':
         st.subheader(f"Predict {player}'s Rating")
         #decide which categories to include
         cols = st.columns(4)

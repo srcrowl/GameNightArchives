@@ -6,7 +6,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import streamlit as st
+import hydralit_components as hc
 
+st.set_page_config(layout='wide')
 if 'Full Data' not in st.session_state:
     st.session_state['Full Data'] = loadData_results()
     
@@ -35,9 +37,17 @@ else:
     past_overall_fraction = past_scores['Game'].sum()/past_gplayed['Game'].sum()
 
 #Set up tabs for each major category
-t1, t2, t3 = st.tabs(['Overall Stats', 'Breaking Down By Games', 'Tracking Progress Over Time'])
+
+#make it look nice from the start
+#st.set_page_config(layout='wide',initial_sidebar_state='collapsed',)
+menu_data = [
+    {'label':"Overall Stats"},
+    {'label':"Breaking Down By Games"},
+    {'label': "Tracking Progress Over Time"}
+]
+menu = hc.nav_bar(menu_definition = menu_data, sticky_nav = True, sticky_mode = 'pinned')
 #Widget indicating win percentage
-with t1:
+if menu == 'Overall Stats':
     st.header('Number of Wins')
     col1, col2, col3 = st.columns(3)
     current_wins = scores_dict['Game'].sum()
@@ -63,14 +73,17 @@ with t1:
 
 
 #Breaking Down By Games
-with t2:
+elif menu == 'Breaking Down By Games':
     st.header('Breaking Down Win Percentage By Game')
-    chart_type = st.selectbox('Chart Type:', ['Bar', 'Heatmap'])
-    category = st.selectbox('Break down stats by:', ['Game','Format',"Game Length", "Team Size", "Primary Classification","Win Condition", "Luck Score", "Sam's Mechanisms", 'Owner', 'Location','Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'])
+
+    #set plot type
+    cols = st.columns([0.3,0.7])
+    chart_type = cols[0].selectbox('Chart Type:', ['Bar', 'Heatmap'])
+    category = cols[0].selectbox('Break down stats by:', ['Game','Format',"Game Length", "Team Size", "Primary Classification","Win Condition", "Luck Score", "Sam's Mechanisms", 'Owner', 'Location','Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'])
     fraction = fraction_dict[category][['Sam', 'Gabi', 'Reagan']]
     games_played = gplayed_dict[category]
 
-    min_gplayed = st.slider('Minimum Number of Times Played', min_value = 0, max_value = 50, value = 0)
+    min_gplayed = cols[0].slider('Minimum Number of Times Played', min_value = 0, max_value = 50, value = 0)
     games_played = games_played[games_played >= min_gplayed]
     fraction = fraction.loc[games_played.index]
         
@@ -87,17 +100,18 @@ with t2:
             plot_dict = par_dict
         fig = win_heatmap(plot_dict, games = games_played.index, category = category, metric = metric)
 
-    st.pyplot(fig)
+    cols[1].pyplot(fig)
 
 
 
 #Tracking Progress Over Time
-with t3:
+else:
     st.header('Tracking Wins Over Time')
     st.write("We've been doing this for a while now, how have wins progressed over time?")
 
-    #time = st.radio('Track time by:' , ['Date', 'Number of Games Played'], horizontal = True)
-    track = st.radio('What do you want to track?', ['Number of Wins', 'Win Fraction', 'Win Time', 'Number of Games', 'Time Spent Playing Games']) 
+    #set plot type
+    cols = st.columns([0.3,0.7])
+    track = cols[0].radio('What do you want to track?', ['Number of Wins', 'Win Fraction', 'Win Time', 'Number of Games', 'Time Spent Playing Games']) 
 
 
     legend = False
@@ -153,4 +167,4 @@ with t3:
     ax.set_ylabel(ylabel)
     plt.xticks(rotation = 45, ha = 'center')
 
-    st.pyplot(fig)
+    cols[1].pyplot(fig)

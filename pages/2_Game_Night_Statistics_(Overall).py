@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import streamlit as st
+import hydralit_components as hc
+st.set_page_config(layout='wide')
 
 if 'Full Data' not in st.session_state:
     st.session_state['Full Data'] = loadData_results()
@@ -28,11 +30,18 @@ past_scores, past_gplayed, past_fraction, past_pae, past_par = processResults(pa
 past_overall_fraction = past_scores['Game'].sum()/past_gplayed['Game'].sum()
 
 
-#Set up tabs for each major category
-t1, t2, t3, t4, t5 = st.tabs(['Overall Stats', 'Breaking Down By Games', 'Tracking Progress Over Time', 'Ongoing Dynasties', 'You are Due for a Win!'])
+#make it look nice from the start
+#st.set_page_config(layout='wide',initial_sidebar_state='collapsed',)
+menu_data = [
+    {'label':"Overall Stats"},
+    {'label':"Breaking Down By Games"},
+    {'label': "Tracking Progress Over Time"},{'label':"Ongoing Dynasties"},
+    {'label':"You are Due For a Win!"}
+]
+menu = hc.nav_bar(menu_definition = menu_data, sticky_nav = True, sticky_mode = 'pinned')
 
-with t1:
-    #Widget indicating win percentage
+if menu == 'Overall Stats':
+        #Widget indicating win percentage
     st.header('Number of Wins')
     col1, col2, col3 = st.columns(3)
     current_wins = scores_dict['Game'].sum()
@@ -46,20 +55,18 @@ with t1:
     col1.metric("Sam", f"{round(overall_fraction['Sam']*100,2)}%", f"{round((overall_fraction['Sam'] - past_overall_fraction['Sam'])*100, 2)}%")
     col2.metric("Gabi", f"{round(overall_fraction['Gabi']*100,2)}%", f"{round((overall_fraction['Gabi'] - past_overall_fraction['Gabi'])*100, 2)}%")
     col3.metric("Reagan", f"{round(overall_fraction['Reagan']*100,2)}%", f"{round((overall_fraction['Reagan'] - past_overall_fraction['Reagan'])*100, 2)}%")
-
-
-
-#Breaking Down By Games
-with t2:
+elif menu == 'Breaking Down By Games':
     st.header('Breaking Down Win Percentage By Game')
-    chart_type = st.selectbox('Chart Type:', ['Bar', 'Heatmap'])
-    category = st.selectbox('Break down stats by:', ['Game','Format',"Game Length", "Team Size", "Primary Classification","Win Condition", "Luck Score", "Sam's Mechanisms", 'Owner', 'Location','Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'])
+    cols = st.columns(spec = [0.3,0.7])
+    chart_type = cols[0].selectbox('Chart Type:', ['Bar', 'Heatmap'])
+    category = cols[0].selectbox('Break down stats by:', ['Game','Format',"Game Length", "Team Size", "Primary Classification","Win Condition", "Luck Score", "Sam's Mechanisms", 'Owner', 'Location','Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'])
     fraction = fraction_dict[category][['Sam', 'Gabi', 'Reagan']]
     games_played = gplayed_dict[category]
 
-    min_gplayed = st.slider('Minimum Number of Times Played', min_value = 0, max_value = 50, value = 0)
+    min_gplayed = cols[0].slider('Minimum Number of Times Played', min_value = 0, max_value = 50, value = 0)
     games_played = games_played[games_played >= min_gplayed]
     fraction = fraction.loc[games_played.index]
+
 	
     if chart_type == 'Bar':
         fig = win_fraction_barplot(fraction, overall_fraction, games_played)
@@ -74,17 +81,14 @@ with t2:
             plot_dict = par_dict
         fig = win_heatmap(plot_dict, games = games_played.index, category = category, metric = metric)
 
-    st.pyplot(fig)
-
-
-with t3:
-    #Tracking Progress Over Time
+    cols[1].pyplot(fig)
+elif menu == 'Tracking Progress Over Time':
+        #Tracking Progress Over Time
     st.header('Tracking Wins Over Time')
     st.write("We've been doing this for a while now, how have wins progressed over time?")
-
+    cols = st.columns(spec = [0.3,0.7])
     #time = st.radio('Track time by:' , ['Date', 'Number of Games Played'], horizontal = True)
-    track = st.radio('What do you want to track?', ['Number of Wins', 'Win Fraction', 'Win Time', 'Number of Games', 'Time Spent Playing Games']) 
-
+    track = cols[0].radio('What do you want to track?', ['Number of Wins', 'Win Fraction', 'Win Time', 'Number of Games', 'Time Spent Playing Games']) 
 
     legend = False
     @st.cache(ttl=300)
@@ -138,12 +142,9 @@ with t3:
         ax.plot(plot_data.index.values, plot_data.values)
     ax.set_ylabel(ylabel)
     plt.xticks(rotation = 45, ha = 'center')
+    cols[1].pyplot(fig)
 
-    st.pyplot(fig)
-
-
-## get current dynasties
-with t4:
+elif menu == 'Ongoing Dynasties':
     st.header('Ongoing Dynasties')
     data = fraction_dict['Game'].copy()
     data = data.melt(ignore_index = False)
@@ -155,13 +156,13 @@ with t4:
         dynasty_string = ''
         player = data.index[i]
         cols[i].header(player)
-        for game in data[player]:
-            if gplayed_dict['Game'][game] >= 2:
-                dynasty_string = dynasty_string + f"{game} ({gplayed_dict['Game'][game]})\n"
+        gplayed_temp = pd.Series(gplayed_dict['Game']).loc[data[player]].sort_values(ascending = False)
+        for game in gplayed_temp.index:
+            if gplayed_temp[game] >= 2:
+                dynasty_string = dynasty_string + f"{game} ({gplayed_temp[game]})\n"
         cols[i].text(dynasty_string)
             #st.text(f'{player}: {data[player]}')
-        
-with t5:
+else:
     st.header('"You are Due": Winless Games')
     data = fraction_dict['Game'].copy()
     data = data.melt(ignore_index = False)
@@ -173,8 +174,9 @@ with t5:
         dynasty_string = ''
         player = data.index[i]
         cols[i].header(player)
-        for game in data[player]:
-            if gplayed_dict['Game'][game] >= 2:
-                dynasty_string = dynasty_string + f"{game} ({gplayed_dict['Game'][game]})\n"
+        gplayed_temp = pd.Series(gplayed_dict['Game']).loc[data[player]].sort_values(ascending = False)
+        for game in gplayed_temp.index:
+            if gplayed_temp[game] >= 2:
+                dynasty_string = dynasty_string + f"{game} ({gplayed_temp[game]})\n"
         cols[i].text(dynasty_string)
             #st.text(f'{player}: {data[player]}')
