@@ -49,27 +49,31 @@ menu = hc.nav_bar(menu_definition = menu_data, sticky_nav = True, sticky_mode = 
 #Widget indicating win percentage
 if menu == 'Overall Stats':
     st.header('Number of Wins')
-    col1, col2, col3 = st.columns(3)
-    current_wins = scores_dict['Game'].sum()
     if prev_data:
         past_wins = past_scores['Game'].sum()
     else:
         past_wins = pd.Series([0,0,0], index = ['Sam', 'Gabi', 'Reagan'])
 
+    st.header('Number of Wins')
+    col1, col2 = st.columns(2)
     col1.metric("Sam", current_wins['Sam'], f"{current_wins['Sam'] - past_wins['Sam']}")
     col2.metric("Gabi", current_wins['Gabi'], f"{current_wins['Gabi'] - past_wins['Gabi']}")
+    col3, col4 = st.columns(2)
     col3.metric("Reagan", current_wins['Reagan'], f"{current_wins['Reagan'] - past_wins['Reagan']}")
+    col4.metric('Adrian', current_wins['Adrian'], f"{current_wins['Adrian'] - past_wins['Adrian']}")
 
     if prev_data:
         past_overall_fraction = past_scores['Game'].sum()
     else:
         past_overall_fraction = pd.Series([0,0,0], index = ['Sam', 'Gabi', 'Reagan'])
     st.header('Win Percentages')
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     col1.metric("Sam", f"{round(overall_fraction.loc['Sam']*100,2)}%", f"{round((overall_fraction.loc['Sam'] - past_overall_fraction.loc['Sam'])*100, 2)}%")
     col2.metric("Gabi", f"{round(overall_fraction.loc['Gabi']*100,2)}%", f"{round((overall_fraction.loc['Gabi'] - past_overall_fraction.loc['Gabi'])*100, 2)}%")
-    col3.metric("Reagan", f"{round(overall_fraction.loc['Reagan']*100,2)}%", f"{round((overall_fraction.loc['Reagan'] - past_overall_fraction.loc['Reagan'])*100, 2)}%")
 
+    col3, col4 = st.columns(2)
+    col3.metric("Reagan", f"{round(overall_fraction.loc['Reagan']*100,2)}%", f"{round((overall_fraction.loc['Reagan'] - past_overall_fraction.loc['Reagan'])*100, 2)}%")
+    col4.metric('Adrian', f"{round(overall_fraction.loc['Adrian']*100,2)}%", f"{round((overall_fraction.loc['Adrian'] - past_overall_fraction.loc['Adrian'])*100, 2)}%")
 
 
 #Breaking Down By Games
@@ -80,7 +84,7 @@ elif menu == 'Breaking Down By Games':
     cols = st.columns([0.3,0.7])
     chart_type = cols[0].selectbox('Chart Type:', ['Bar', 'Heatmap'])
     category = cols[0].selectbox('Break down stats by:', ['Game','Format',"Game Length", "Team Size", "Primary Classification","Win Condition", "Luck Score", "Sam's Mechanisms", 'Owner', 'Location','Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'])
-    fraction = fraction_dict[category][['Sam', 'Gabi', 'Reagan']]
+    fraction = fraction_dict[category][['Sam', 'Gabi', 'Reagan', 'Adrian']]
     games_played = gplayed_dict[category]
 
     min_gplayed = cols[0].slider('Minimum Number of Times Played', min_value = 0, max_value = 50, value = 0)
@@ -138,7 +142,7 @@ else:
                 plot_data = plot_data.pivot(columns = 'Winner', index = 'Date', values = 'Wins')
                 plot_data = plot_data.replace(np.nan, 0)
                 plot_data = plot_data.cumsum()
-                plot_data = plot_data[['Sam', 'Gabi', 'Reagan']]
+                plot_data = plot_data[['Sam', 'Gabi', 'Reagan', 'Adrian']]
                 if track == 'Number of Wins':
                     legend = True
                     ylabel = 'Number of Wins'
