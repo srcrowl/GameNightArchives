@@ -49,12 +49,12 @@ menu = hc.nav_bar(menu_definition = menu_data, sticky_nav = True, sticky_mode = 
 #Widget indicating win percentage
 if menu == 'Overall Stats':
     st.header('Number of Wins')
+    current_wins = scores_dict['Game'].sum()
     if prev_data:
         past_wins = past_scores['Game'].sum()
     else:
         past_wins = pd.Series([0,0,0], index = ['Sam', 'Gabi', 'Reagan'])
 
-    st.header('Number of Wins')
     col1, col2 = st.columns(2)
     col1.metric("Sam", current_wins['Sam'], f"{current_wins['Sam'] - past_wins['Sam']}")
     col2.metric("Gabi", current_wins['Gabi'], f"{current_wins['Gabi'] - past_wins['Gabi']}")
