@@ -53,7 +53,7 @@ if menu == 'Overall Stats':
     if prev_data:
         past_wins = past_scores['Game'].sum()
     else:
-        past_wins = pd.Series([0,0,0], index = ['Sam', 'Gabi', 'Reagan'])
+        past_wins = pd.Series([0,0,0,0], index = ['Sam', 'Gabi', 'Reagan', 'Adrian'])
 
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Sam", current_wins['Sam'], f"{current_wins['Sam'] - past_wins['Sam']}")
@@ -64,7 +64,7 @@ if menu == 'Overall Stats':
     if prev_data:
         past_overall_fraction = past_scores['Game'].sum()
     else:
-        past_overall_fraction = pd.Series([0,0,0], index = ['Sam', 'Gabi', 'Reagan'])
+        past_overall_fraction = pd.Series([0,0,0,0], index = ['Sam', 'Gabi', 'Reagan', 'Adrian'])
     st.header('Win Percentages')
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Sam", f"{round(overall_fraction.loc['Sam']*100,2)}%", f"{round((overall_fraction.loc['Sam'] - past_overall_fraction.loc['Sam'])*100, 2)}%")
