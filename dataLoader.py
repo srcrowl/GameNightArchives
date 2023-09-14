@@ -88,7 +88,7 @@ def loadData_ratings():
     #read in ratings
     sheets_query = runQuery(st.secrets['ratings_url'])
     columns = ['Date of Entry', 'Name','Rummikub', 'Trial by Trolley','Sequence', 'Galaxy Trucker', 'Rat-a-tat Cat', 'Quacks of Quedlinberg', 'Uno', 'Phase 10', 'Goat Lords', 'Taboo', 'Qwixx', 'Smart Ass', 'Anomia', 'Spades', 'President', 'ERS', 'Love Letter', 'Codenames', 'Peptide', 'Hangry', "That's Pretty Clever", '5 Second Rule', 'Exploding Kittens', 'Llamas Unleashed', 'Carcassonne', 'Uno Flip', 'Bananagrams', 'Betrayal at the House on the Hill', 'Blokus', 'Azul', 'Calico', 'Unearth', 'Hearts', 'Dominion', 'Happy Little Dinosaurs', 'Balderdash', 'Pictionary', 'Sushi Go Dice', 'Fairy Tale', 'Settlers of Catan', '5 Alive', 'Poetry for Neanderthals', 'Least count', "Kings in the Corner", 'Infinity Gauntlet', 'Ten', 'Silver and Gold', 'King of Tokyo', 'Five Crowns', 'Long Shot', 'Bloom', 'Forbidden Desert', 'The Initiative', 'Horrified', 'Hanabi', 'Arkham Horror', 'Mysterium', 'Control', 'Coup', 'Jenga', 'Towers of Arkhanos', 'Dune', 'The Crew: Quest for Planet Nine', 'Superfight', 'Happy Salmon', 'Hand-to-Hand Wombat',
-    'The Search for Planet X', 'Doomlings', 'Sagrada', 'Take 5', 'Sushi Go!', 'Gloomhaven: Jaws of the Lion', 'Dixit', 'Nova Luna', 'Railroad Ink']
+    'The Search for Planet X', 'Doomlings', 'Sagrada', 'Take 5', 'Sushi Go!', 'Gloomhaven: Jaws of the Lion', 'Dixit', 'Nova Luna', 'Railroad Ink', 'SkyJo', 'Arboretum']
     results = pd.DataFrame(sheets_query, columns = columns)
     results = results.sort_values(by = 'Date of Entry', ascending = False)
     results_trim = []
