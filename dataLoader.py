@@ -110,18 +110,24 @@ def loadData_trivia():
 
 def processResults(data, overall_only = False):
     scores_dict = {}
-    gplayed_dict = {}
+    gplayed_overall_dict = {}
+    gplayed_player_dict = {}
     fraction_dict = {}
     pae_dict = {}
     par_dict = {}
     tmp_data = data.copy()
+    #games played
+    games_played_overall = tmp_data.groupby('Game Title').size()
+    games_played_overall = games_played_overall.astype(int)
+    games_played_overall.name = 'Number of Plays'
     #separate out players
     tmp_data['Players'] = tmp_data['Players'].apply(lambda x: x.split(';'))
     tmp_data = tmp_data.explode('Players')
-    games_played = tmp_data.groupby(['Players', 'Game Title']).size()
-    games_played = games_played.astype(int)
-    games_played.name = 'Number of Plays'
-    games_played = games_played.reset_index().pivot(columns = 'Players', index = 'Game Title', values = 'Number of Plays')
+    games_played_player = tmp_data.groupby(['Players', 'Game Title']).size()
+    games_played_player = games_played_player.astype(int)
+    games_played_player.name = 'Number of Plays'
+    games_played_player = games_played_player.reset_index().pivot(columns = 'Players', index = 'Game Title', values = 'Number of Plays')
+    games_played_player = games_played_player.replace(np.nan, 0)
     #explode dataframe to separate winners when there were multiple
     tmp_data['Winner'] = tmp_data['Winner'].apply(lambda x: x.split(';'))
     tmp_data = tmp_data.explode('Winner')
@@ -132,51 +138,52 @@ def processResults(data, overall_only = False):
     overall_scores = overall_scores.pivot(columns = 'Winner', index = 'Game Title', values = 0)
     overall_scores = overall_scores.replace(np.nan, 0)
     #get overall win fraction for each player
-    overall_fraction = overall_scores.sum()/games_played.sum()
+    overall_fraction = overall_scores.sum()/games_played_player.sum()
     #get game-specific results
     scores_dict['Game'] = overall_scores
-    gplayed_dict['Game'] = games_played
-    fraction_dict['Game'] = getFraction(overall_scores, games_played)
+    gplayed_overall_dict['Game'] = games_played_overall
+    gplayed_player_dict['Game'] = games_played_player
+    fraction_dict['Game'] = getFraction(overall_scores, games_played_player)
     pae_dict['Game'] = getPercentageAboveExpected(fraction_dict['Game'], overall_fraction)
     par_dict['Game'] = getPercentageAboveRandom(fraction_dict['Game'])
     if not overall_only:
         #get owner specific results
-        scores_dict['Owner'], gplayed_dict['Owner'], fraction_dict['Owner'], pae_dict['Owner'], par_dict['Owner'] = getDictionaries('Owner', 'Owner', overall_scores, games_played, overall_fraction)
+        scores_dict['Owner'], gplayed_overall_dict['Owner'], gplayed_player_dict['Owner'], fraction_dict['Owner'], pae_dict['Owner'], par_dict['Owner'] = getDictionaries('Owner', 'Owner', overall_scores, games_played_overall, games_played_player, overall_fraction)
         
         #get format specific results
-        scores_dict['Format'], gplayed_dict['Format'], fraction_dict['Format'], pae_dict['Format'], par_dict['Format'] = getDictionaries('Format', 'Format', overall_scores, games_played, overall_fraction)
+        scores_dict['Format'], gplayed_overall_dict['Format'], gplayed_player_dict['Format'], fraction_dict['Format'], pae_dict['Format'], par_dict['Format'] = getDictionaries('Format', 'Format', overall_scores, games_played_overall, games_played_player, overall_fraction)
         
                 #get primary classification specific results
-        scores_dict['Primary Classification'], gplayed_dict['Primary Classification'], fraction_dict['Primary Classification'], pae_dict['Primary Classification'], par_dict['Primary Classification'] = getDictionaries('Primary Classification', 'Primary Classification', overall_scores, games_played, overall_fraction)
+        scores_dict['Primary Classification'], gplayed_overall_dict['Primary Classification'], gplayed_player_dict['Primary Classification'], fraction_dict['Primary Classification'], pae_dict['Primary Classification'], par_dict['Primary Classification'] = getDictionaries('Primary Classification', 'Primary Classification', overall_scores, games_played_overall, games_played_player, overall_fraction)
         
                         #get primary classification specific results
-        scores_dict['Game Length'], gplayed_dict['Game Length'], fraction_dict['Game Length'], pae_dict['Game Length'], par_dict['Game Length'] = getDictionaries('Game Length', 'Game Length', overall_scores, games_played, overall_fraction)
+        scores_dict['Game Length'], gplayed_overall_dict['Game Length'], gplayed_player_dict['Game Length'], fraction_dict['Game Length'], pae_dict['Game Length'], par_dict['Game Length'] = getDictionaries('Game Length', 'Game Length', overall_scores, games_played_overall, games_played_player, overall_fraction)
         
         #get team size specific results
-        scores_dict['Team Size'], gplayed_dict['Team Size'], fraction_dict['Team Size'], pae_dict['Team Size'], par_dict['Team Size'] = getDictionaries('Team Size', 'Team Size', overall_scores, games_played, overall_fraction)
+        scores_dict['Team Size'], gplayed_overall_dict['Team Size'], gplayed_player_dict['Team Size'], fraction_dict['Team Size'], pae_dict['Team Size'], par_dict['Team Size'] = getDictionaries('Team Size', 'Team Size', overall_scores, games_played_overall, games_played_player, overall_fraction)
         
         #get type specific results
-        scores_dict["Sam's Mechanisms"], gplayed_dict["Sam's Mechanisms"], fraction_dict["Sam's Mechanisms"], pae_dict["Sam's Mechanisms"], par_dict["Sam's Mechanisms"] = getDictionaries("Sam's Mechanisms", "Sam's Mechanisms", overall_scores, games_played, overall_fraction)
+        scores_dict["Sam's Mechanisms"], gplayed_overall_dict["Sam's Mechanisms"], gplayed_player_dict["Sam's Mechanisms"],fraction_dict["Sam's Mechanisms"], pae_dict["Sam's Mechanisms"], par_dict["Sam's Mechanisms"] = getDictionaries("Sam's Mechanisms", "Sam's Mechanisms", overall_scores, games_played_overall, games_played_player, overall_fraction)
         
                 
         #get win condition specific results
-        scores_dict["Win Condition"], gplayed_dict["Win Condition"], fraction_dict["Win Condition"], pae_dict["Win Condition"], par_dict['Win Condition'] = getDictionaries("Win Condition", "Win Condition", overall_scores, games_played, overall_fraction)
+        scores_dict["Win Condition"], gplayed_overall_dict['Win Condition'], gplayed_player_dict['Win Condition'], fraction_dict["Win Condition"], pae_dict["Win Condition"], par_dict['Win Condition'] = getDictionaries("Win Condition", "Win Condition", overall_scores, games_played_overall, games_played_player, overall_fraction)
         
                         
         #get luck score specific results
-        scores_dict["Luck Score"], gplayed_dict["Luck Score"], fraction_dict["Luck Score"], pae_dict["Luck Score"], par_dict['Luck Score'] = getDictionaries("Luck Score", "Luck Score", overall_scores, games_played, overall_fraction)
+        scores_dict["Luck Score"], gplayed_overall_dict['Luck Score'], gplayed_player_dict['Luck Score'], fraction_dict["Luck Score"], pae_dict["Luck Score"], par_dict['Luck Score'] = getDictionaries("Luck Score", "Luck Score", overall_scores, games_played_overall, games_played_player, overall_fraction)
         
         #get theme specific results
-        scores_dict['Theme'], gplayed_dict['Theme'], fraction_dict['Theme'], pae_dict['Theme'], par_dict['Theme'] = getDictionaries('Theme', 'Theme', overall_scores, games_played, overall_fraction)
+        scores_dict['Theme'], gplayed_overall_dict['Theme'], gplayed_player_dict['Them'], fraction_dict['Theme'], pae_dict['Theme'], par_dict['Theme'] = getDictionaries('Theme', 'Theme', overall_scores, games_played_overall, games_played_player, overall_fraction)
         
         #get BGG type
-        scores_dict['BGG Type'], gplayed_dict['BGG Type'], fraction_dict['BGG Type'], pae_dict['BGG Type'], par_dict['BGG Type'] = getDictionaries('BGG Type', 'BGG Type', overall_scores, games_played, overall_fraction)
+        scores_dict['BGG Type'], gplayed_overall_dict['BGG Type'], gplayed_player_dict['BGG Type'], fraction_dict['BGG Type'], pae_dict['BGG Type'], par_dict['BGG Type'] = getDictionaries('BGG Type', 'BGG Type', overall_scores, games_played_overall, games_played_player, overall_fraction)
         
         #get BGG category
-        scores_dict['BGG Category'], gplayed_dict['BGG Category'], fraction_dict['BGG Category'], pae_dict['BGG Category'], par_dict['BGG Category'] = getDictionaries('BGG Category', 'BGG Category', overall_scores, games_played, overall_fraction)
+        scores_dict['BGG Category'], gplayed_overall_dict['BGG Category'], gplayed_player_dict['BGG Category'], fraction_dict['BGG Category'], pae_dict['BGG Category'], par_dict['BGG Category'] = getDictionaries('BGG Category', 'BGG Category', overall_scores, games_played_overall, games_played_player, overall_fraction)
         
         #get BGG mechanism
-        scores_dict['BGG Mechanism'], gplayed_dict['BGG Mechanism'], fraction_dict['BGG Mechanism'], pae_dict['BGG Mechanism'], par_dict['BGG Mechanism'] = getDictionaries('BGG Mechanism', 'BGG Mechanism',overall_scores, games_played, overall_fraction)
+        scores_dict['BGG Mechanism'], gplayed_overall_dict['BGG Mechanism'], gplayed_player_dict['BGG Mechanism'], fraction_dict['BGG Mechanism'], pae_dict['BGG Mechanism'], par_dict['BGG Mechanism'] = getDictionaries('BGG Mechanism', 'BGG Mechanism',overall_scores, games_played_overall, games_played_player, overall_fraction)
         
         #get location specific results
         location_scores = tmp_data.groupby(['Winner', 'Location']).size().reset_index()
@@ -191,22 +198,24 @@ def processResults(data, overall_only = False):
         location_gplayed.name = 'Number of Plays'
         location_gplayed = location_gplayed.reset_index().pivot(columns = 'Players', index = 'Location', values = 'Number of Plays')
         scores_dict['Location'] = location_scores
-        gplayed_dict['Location'] = location_gplayed
+        gplayed_player_dict['Location'] = location_gplayed
+        gplayed_overall_dict['Location'] = data.groupby('Location').size()
         fraction_dict['Location'] = getFraction(location_scores, location_gplayed)
         pae_dict['Location'] = getPercentageAboveExpected(fraction_dict['Location'], overall_fraction)
         par_dict['Location'] = getPercentageAboveRandom(fraction_dict['Location'])
     
-    return scores_dict, gplayed_dict, fraction_dict, pae_dict, par_dict
+    return scores_dict, gplayed_overall_dict, gplayed_player_dict, fraction_dict, pae_dict, par_dict
     
     
-def getDictionaries(key, col, overall_scores, games_played, overall_fraction):
+def getDictionaries(key, col, overall_scores, games_played_overall, games_played_player, overall_fraction):
     scores = st.session_state[key].merge(overall_scores, on = 'Game Title').groupby(col).sum()
     scores = scores.drop('Game Title', axis = 1)
-    gplayed = st.session_state[key].merge(games_played, on = 'Game Title').groupby(col).sum()
-    fraction = getFraction(scores, gplayed)
+    gplayed_overall = st.session_state[key].merge(games_played_overall, left_on = 'Game Title', right_index = True).groupby(col).sum()
+    gplayed_player = st.session_state[key].merge(games_played_player, on = 'Game Title').groupby(col).sum()
+    fraction = getFraction(scores, gplayed_player)
     pae = getPercentageAboveExpected(fraction, overall_fraction)
     par = getPercentageAboveRandom(fraction)
-    return scores, gplayed, fraction, pae, par
+    return scores, gplayed_overall, gplayed_player, fraction, pae, par
     
 def getFraction(scores, games_played):
     fraction = scores.copy()

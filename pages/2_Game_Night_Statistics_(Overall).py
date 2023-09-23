@@ -21,14 +21,13 @@ if 'Rating' not in st.session_state:
 st.title('Game Night Statistics')
 
 #load data
-scores_dict, gplayed_dict, fraction_dict, pae_dict, par_dict = processResults(st.session_state['Full Data'])
-overall_fraction = scores_dict['Game'].sum()/gplayed_dict['Game'].sum()
+scores_dict, gplayed_dict_overall, gplayed_dict_player, fraction_dict, pae_dict, par_dict = processResults(st.session_state['Full Data'])
+overall_fraction = scores_dict['Game'].sum()/gplayed_dict_player['Game'].sum()
 
 #load data minus the last 15 games
 past_data = st.session_state['Full Data'].iloc[0:-15]
-past_scores, past_gplayed, past_fraction, past_pae, past_par = processResults(past_data, overall_only = True)
-past_overall_fraction = past_scores['Game'].sum()/past_gplayed['Game'].sum()
-
+past_scores, past_gplayed_overall, past_gplayed_player, past_fraction, past_pae, past_par = processResults(past_data, overall_only = True)
+past_overall_fraction = past_scores['Game'].sum()/past_gplayed_player['Game'].sum()
 
 #make it look nice from the start
 #st.set_page_config(layout='wide',initial_sidebar_state='collapsed',)
@@ -46,22 +45,34 @@ if menu == 'Overall Stats':
     col1, col2, col3 = st.columns(3)
     current_wins = scores_dict['Game'].sum()
     past_wins = past_scores['Game'].sum()
+
+    #write the overall wins
+    col1, col2, col3, col4 = st.columns(4)
     col1.metric("Sam", current_wins['Sam'], f"{current_wins['Sam'] - past_wins['Sam']}")
     col2.metric("Gabi", current_wins['Gabi'], f"{current_wins['Gabi'] - past_wins['Gabi']}")
     col3.metric("Reagan", current_wins['Reagan'], f"{current_wins['Reagan'] - past_wins['Reagan']}")
+    if 'Adrian' in past_wins.index:
+        col4.metric('Adrian', current_wins['Adrian'], f"{current_wins['Adrian'] - past_wins['Adrian']}")
+    else:
+        col4.metric('Adrian', current_wins['Adrian'], current_wins['Adrian'])
 
     st.header('Win Percentages')
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Sam", f"{round(overall_fraction['Sam']*100,2)}%", f"{round((overall_fraction['Sam'] - past_overall_fraction['Sam'])*100, 2)}%")
-    col2.metric("Gabi", f"{round(overall_fraction['Gabi']*100,2)}%", f"{round((overall_fraction['Gabi'] - past_overall_fraction['Gabi'])*100, 2)}%")
-    col3.metric("Reagan", f"{round(overall_fraction['Reagan']*100,2)}%", f"{round((overall_fraction['Reagan'] - past_overall_fraction['Reagan'])*100, 2)}%")
+    #write overall percentages
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Sam", f"{round(overall_fraction.loc['Sam']*100,2)}%", f"{round((overall_fraction.loc['Sam'] - past_overall_fraction.loc['Sam'])*100, 2)}%")
+    col2.metric("Gabi", f"{round(overall_fraction.loc['Gabi']*100,2)}%", f"{round((overall_fraction.loc['Gabi'] - past_overall_fraction.loc['Gabi'])*100, 2)}%")
+    col3.metric("Reagan", f"{round(overall_fraction.loc['Reagan']*100,2)}%", f"{round((overall_fraction.loc['Reagan'] - past_overall_fraction.loc['Reagan'])*100, 2)}%")
+    if 'Adrian' in past_overall_fraction.index:
+        col4.metric('Adrian', f"{round(overall_fraction.loc['Adrian']*100,2)}%", f"{round((overall_fraction.loc['Adrian'] - past_overall_fraction.loc['Adrian'])*100, 2)}%")
+    else:
+        col4.metric('Adrian', f"{round(overall_fraction.loc['Adrian']*100,2)}%", f"{round(overall_fraction.loc['Adrian']*100, 2)}%")
 elif menu == 'Breaking Down By Games':
     st.header('Breaking Down Win Percentage By Game')
     cols = st.columns(spec = [0.3,0.7])
     chart_type = cols[0].selectbox('Chart Type:', ['Bar', 'Heatmap'])
     category = cols[0].selectbox('Break down stats by:', ['Game','Format',"Game Length", "Team Size", "Primary Classification","Win Condition", "Luck Score", "Sam's Mechanisms", 'Owner', 'Location','Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'])
-    fraction = fraction_dict[category][['Sam', 'Gabi', 'Reagan']]
-    games_played = gplayed_dict[category]
+    fraction = fraction_dict[category][['Sam', 'Gabi', 'Reagan', 'Adrian']]
+    games_played = gplayed_dict_player[category]
 
     min_gplayed = cols[0].slider('Minimum Number of Times Played', min_value = 0, max_value = 50, value = 0)
     games_played = games_played[games_played >= min_gplayed]
@@ -114,7 +125,7 @@ elif menu == 'Tracking Progress Over Time':
                 plot_data = plot_data.pivot(columns = 'Winner', index = 'Date', values = 'Wins')
                 plot_data = plot_data.replace(np.nan, 0)
                 plot_data = plot_data.cumsum()
-                plot_data = plot_data[['Sam', 'Gabi', 'Reagan']]
+                plot_data = plot_data[['Sam', 'Gabi', 'Reagan', 'Adrian']]
                 if track == 'Number of Wins':
                     legend = True
                     ylabel = 'Number of Wins'

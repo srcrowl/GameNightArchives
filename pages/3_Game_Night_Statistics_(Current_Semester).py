@@ -23,8 +23,8 @@ st.title(f'Game Night Statistics ({current_semester})')
 
 #load data
 full_data = st.session_state['Full Data'][st.session_state['Full Data']['Semester'] == current_semester]
-scores_dict, gplayed_dict, fraction_dict, pae_dict, par_dict = processResults(full_data)
-overall_fraction = scores_dict['Game'].sum()/gplayed_dict['Game'].sum()
+scores_dict, gplayed_dict_overall, gplayed_dict_player, fraction_dict, pae_dict, par_dict = processResults(st.session_state['Full Data'])
+overall_fraction = scores_dict['Game'].sum()/gplayed_dict_player['Game'].sum()
 
 #load data minus the last 15 games
 most_recent_date = full_data['Date'].unique()[:-1]
@@ -33,8 +33,8 @@ if past_data.shape[0] == 0:
     prev_data = False
 else:
     prev_data = True
-    past_scores, past_gplayed, past_fraction, past_pae, par_dict = processResults(past_data, overall_only = True)
-    past_overall_fraction = past_scores['Game'].sum()/past_gplayed['Game'].sum()
+    past_scores, past_gplayed_overall, past_gplayed_player, past_fraction, past_pae, par_dict = processResults(past_data, overall_only = True)
+    past_overall_fraction = past_scores['Game'].sum()/past_gplayed_player['Game'].sum()
 
 #Set up tabs for each major category
 
@@ -80,7 +80,7 @@ elif menu == 'Breaking Down By Games':
     chart_type = cols[0].selectbox('Chart Type:', ['Bar', 'Heatmap'])
     category = cols[0].selectbox('Break down stats by:', ['Game','Format',"Game Length", "Team Size", "Primary Classification","Win Condition", "Luck Score", "Sam's Mechanisms", 'Owner', 'Location','Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'])
     fraction = fraction_dict[category][['Sam', 'Gabi', 'Reagan', 'Adrian']]
-    games_played = gplayed_dict[category]
+    games_played = gplayed_dict_player[category]
 
     min_gplayed = cols[0].slider('Minimum Number of Times Played', min_value = 0, max_value = 50, value = 0)
     games_played = games_played[games_played >= min_gplayed]

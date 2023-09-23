@@ -17,7 +17,7 @@ def win_fraction_barplot(fraction_by_game, overall_fraction, games_played):
 		ax[p].set_title(name)
 		for i in range(fraction_by_game.shape[0]):
 			index = fraction_by_game.index[i]
-			ax[p].annotate(int(games_played[index]), (i, fraction_by_game.loc[index,name]), ha = 'center')
+			ax[p].annotate(int(games_played.loc[index, name]), (i, fraction_by_game.loc[index,name]), ha = 'center')
 			
 	return fig
 	
