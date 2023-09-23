@@ -1,4 +1,5 @@
 import pandas as pd 
+import numpy as np
 import streamlit as st
 from shillelagh.backends.apsw.db import connect
 
@@ -16,7 +17,7 @@ def runQuery(sheets_link):
 
 def loadData_results():
     sheets_query = runQuery(st.secrets['results_url'])
-    results = pd.DataFrame(sheets_query, columns = ['Date', 'Semester', 'Game Title', 'Winner', 'Play Time (min)', 'Scores', 'Game-specific Notes', 'Location'])
+    results = pd.DataFrame(sheets_query, columns = ['Date', 'Semester', 'Game Title', 'Winner', 'Play Time (min)', 'Scores', 'Game-specific Notes', 'Location', 'First Player', 'Players'])
     return results
     
 def processCategories(data, category_type = 'Game Type'):
@@ -114,14 +115,23 @@ def processResults(data, overall_only = False):
     pae_dict = {}
     par_dict = {}
     tmp_data = data.copy()
-    games_played = tmp_data.groupby('Game Title').size()
+    #separate out players
+    tmp_data['Players'] = tmp_data['Players'].apply(lambda x: x.split(';'))
+    tmp_data = tmp_data.explode('Players')
+    games_played = tmp_data.groupby(['Players', 'Game Title']).size()
     games_played = games_played.astype(int)
     games_played.name = 'Number of Plays'
+    games_played = games_played.reset_index().pivot(columns = 'Players', index = 'Game Title', values = 'Number of Plays')
     #explode dataframe to separate winners when there were multiple
     tmp_data['Winner'] = tmp_data['Winner'].apply(lambda x: x.split(';'))
     tmp_data = tmp_data.explode('Winner')
+    #get rid of rows where winner does not match player
+    tmp_data = tmp_data[tmp_data['Players'] == tmp_data['Winner']]
+    #count the number of wins for each game and each player
     overall_scores = tmp_data.groupby(['Game Title', 'Winner']).size().reset_index()
     overall_scores = overall_scores.pivot(columns = 'Winner', index = 'Game Title', values = 0)
+    overall_scores = overall_scores.replace(np.nan, 0)
+    #get overall win fraction for each player
     overall_fraction = overall_scores.sum()/games_played.sum()
     #get game-specific results
     scores_dict['Game'] = overall_scores
@@ -171,7 +181,15 @@ def processResults(data, overall_only = False):
         #get location specific results
         location_scores = tmp_data.groupby(['Winner', 'Location']).size().reset_index()
         location_scores = location_scores.pivot(columns = 'Winner', index = 'Location', values = 0)
-        location_gplayed = data.groupby(['Location']).size()
+        #get gamesplayed per location
+        player_data = data.copy()
+        player_data['Players'] = player_data['Players'].apply(lambda x: x.split(';'))
+        player_data = player_data.explode('Players')
+        #get games played at each location
+        location_gplayed = player_data.groupby(['Players','Location']).size()
+        location_gplayed = location_gplayed.astype(int)
+        location_gplayed.name = 'Number of Plays'
+        location_gplayed = location_gplayed.reset_index().pivot(columns = 'Players', index = 'Location', values = 'Number of Plays')
         scores_dict['Location'] = location_scores
         gplayed_dict['Location'] = location_gplayed
         fraction_dict['Location'] = getFraction(location_scores, location_gplayed)
@@ -184,7 +202,7 @@ def processResults(data, overall_only = False):
 def getDictionaries(key, col, overall_scores, games_played, overall_fraction):
     scores = st.session_state[key].merge(overall_scores, on = 'Game Title').groupby(col).sum()
     scores = scores.drop('Game Title', axis = 1)
-    gplayed = st.session_state[key].merge(games_played, left_on = 'Game Title', right_index = True).groupby(col).sum()['Number of Plays']
+    gplayed = st.session_state[key].merge(games_played, on = 'Game Title').groupby(col).sum()
     fraction = getFraction(scores, gplayed)
     pae = getPercentageAboveExpected(fraction, overall_fraction)
     par = getPercentageAboveRandom(fraction)
@@ -193,7 +211,7 @@ def getDictionaries(key, col, overall_scores, games_played, overall_fraction):
 def getFraction(scores, games_played):
     fraction = scores.copy()
     for col in fraction.columns:
-        fraction[col] = fraction[col].astype(float)/games_played
+        fraction[col] = fraction[col].astype(float)/games_played[col]
     return fraction
 
 def getPercentageAboveRandom(fraction):

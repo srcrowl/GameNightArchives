@@ -61,9 +61,7 @@ if menu == 'Overall Stats':
     col3.metric("Reagan", current_wins['Reagan'], f"{current_wins['Reagan'] - past_wins['Reagan']}")
     col4.metric('Adrian', current_wins['Adrian'], f"{current_wins['Adrian'] - past_wins['Adrian']}")
 
-    if prev_data:
-        past_overall_fraction = past_scores['Game'].sum()
-    else:
+    if not prev_data:
         past_overall_fraction = pd.Series([0,0,0,0], index = ['Sam', 'Gabi', 'Reagan', 'Adrian'])
     st.header('Win Percentages')
     col1, col2, col3, col4 = st.columns(4)
