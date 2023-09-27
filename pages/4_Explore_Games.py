@@ -37,7 +37,7 @@ if type_to_explore == 'Game':
     games_with_scores['Player'] = games_with_scores['Scores'].apply(lambda x: x.split('=')[0])
     games_with_scores['Score'] = games_with_scores['Scores'].apply(lambda x: x.split('=')[1])
     games_with_scores['Score'] = games_with_scores['Score'].astype(int)
-    scores_dict, gplayed_dict, fraction_dict, pae_dict, par_dict = processResults(game_data)
+    scores_dict, gplayed_dict, gplayed_dict_player, fraction_dict, pae_dict, par_dict = processResults(game_data)
 
     number_of_wins = scores_dict['Game'].T
     most_wins = np.max(number_of_wins.values)
