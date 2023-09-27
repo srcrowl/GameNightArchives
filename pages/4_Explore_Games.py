@@ -180,7 +180,7 @@ else:
     if menu == 'Summary Statistics':
         game_data = st.session_state['Full Data'].copy()
         game_data = game_data.merge(category_data, on = 'Game Title')
-        scores_dict, gplayed_dict, fraction_dict, pae_dict, par_dict = processResults(game_data)
+        scores_dict, gplayed_dict, gplayed_dict_player, fraction_dict, pae_dict, par_dict = processResults(game_data)
         scores = scores_dict['Game']
         if 'Lionel' in scores.columns:
             scores = scores.drop(columns = 'Lionel', axis = 1)
