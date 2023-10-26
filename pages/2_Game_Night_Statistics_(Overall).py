@@ -102,7 +102,7 @@ elif menu == 'Tracking Progress Over Time':
     track = cols[0].radio('What do you want to track?', ['Number of Wins', 'Win Fraction', 'Win Time', 'Number of Games', 'Time Spent Playing Games']) 
 
     legend = False
-    @st.cache(ttl=300)
+    @st.cache_data(ttl=300)
     def plotCumulative(track = 'Number of Games'):
         if track == 'Number of Games':
             plot_data = st.session_state['Full Data'].groupby(['Date']).size().cumsum()
@@ -167,7 +167,7 @@ elif menu == 'Ongoing Dynasties':
         dynasty_string = ''
         player = data.index[i]
         cols[i].header(player)
-        gplayed_temp = pd.Series(gplayed_dict['Game']).loc[data[player]].sort_values(ascending = False)
+        gplayed_temp = pd.Series(gplayed_dict_overall['Game']).loc[data[player]].sort_values(ascending = False)
         for game in gplayed_temp.index:
             if gplayed_temp[game] >= 2:
                 dynasty_string = dynasty_string + f"{game} ({gplayed_temp[game]})\n"
@@ -177,7 +177,7 @@ else:
     st.header('"You are Due": Winless Games')
     data = fraction_dict['Game'].copy()
     data = data.melt(ignore_index = False)
-    data = data[data['value'].isna()].reset_index()
+    data = data[data['value'] == 0].reset_index()
     data = data.groupby('Winner')['Game Title'].apply(list)
     data = data[['Sam', 'Gabi', 'Reagan']]
     cols = st.columns(3)
@@ -185,7 +185,7 @@ else:
         dynasty_string = ''
         player = data.index[i]
         cols[i].header(player)
-        gplayed_temp = pd.Series(gplayed_dict['Game']).loc[data[player]].sort_values(ascending = False)
+        gplayed_temp = pd.Series(gplayed_dict_overall['Game']).loc[data[player]].sort_values(ascending = False)
         for game in gplayed_temp.index:
             if gplayed_temp[game] >= 2:
                 dynasty_string = dynasty_string + f"{game} ({gplayed_temp[game]})\n"

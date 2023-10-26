@@ -3,7 +3,7 @@ import numpy as np
 import streamlit as st
 from shillelagh.backends.apsw.db import connect
 
-@st.cache(ttl = 600)
+@st.cache_data(ttl = 600)
 def runQuery(sheets_link):
     connection = connect(":memory:", adapters = 'gsheetsapi')
     cursor = connection.cursor()
@@ -208,10 +208,10 @@ def processResults(data, overall_only = False):
     
     
 def getDictionaries(key, col, overall_scores, games_played_overall, games_played_player, overall_fraction):
-    scores = st.session_state[key].merge(overall_scores, on = 'Game Title').groupby(col).sum()
-    scores = scores.drop('Game Title', axis = 1)
+    scores = st.session_state[key].merge(overall_scores, on = 'Game Title').groupby(col).sum(numeric_only = True)
+    #scores = scores.drop('Game Title', axis = 1)
     gplayed_overall = st.session_state[key].merge(games_played_overall, left_on = 'Game Title', right_index = True).groupby(col).sum()
-    gplayed_player = st.session_state[key].merge(games_played_player, on = 'Game Title').groupby(col).sum()
+    gplayed_player = st.session_state[key].merge(games_played_player, on = 'Game Title').groupby(col).sum(numeric_only = True)
     fraction = getFraction(scores, gplayed_player)
     pae = getPercentageAboveExpected(fraction, overall_fraction)
     par = getPercentageAboveRandom(fraction)

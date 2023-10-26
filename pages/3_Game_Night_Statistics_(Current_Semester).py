@@ -114,7 +114,7 @@ else:
 
 
     legend = False
-    @st.cache(ttl=300)
+    @st.cache_data(ttl=300)
     def plotCumulative(track = 'Number of Games'):
         if track == 'Number of Games':
             plot_data = full_data.groupby(['Date']).size().cumsum()
