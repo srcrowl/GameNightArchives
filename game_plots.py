@@ -4,10 +4,13 @@ import streamlit as st
 
 
 
-def win_fraction_barplot(fraction_by_game, overall_fraction, games_played):
-	fig, ax = plt.subplots(figsize = (10,6), nrows = 3, sharex = 'col', sharey = 'all')
-	for p in range(3):
-		name = fraction_by_game.columns[p]
+def win_fraction_barplot(fraction_by_game, overall_fraction, games_played, players = ['Sam', 'Gabi', 'Reagan', 'Adrian']):
+	fig, ax = plt.subplots(figsize = (10,2*len(players)), nrows = len(players), sharex = 'col', sharey = 'all')
+	fig.subplots_adjust(hspace = 0.5)
+	if len(players) == 1:
+		ax = [ax]
+
+	for p, name in enumerate(players):
 		ax[p].bar(fraction_by_game.index,fraction_by_game[name])
 		#ax[p].axhline(overall_fraction[name], linestyle = 'dashed', color = 'red')
 		ax[p].axhline(1/3, linestyle = 'dashed', color = 'red')
@@ -22,29 +25,30 @@ def win_fraction_barplot(fraction_by_game, overall_fraction, games_played):
 	return fig
 	
 	
-def win_heatmap(plot_dict, games = None, category = 'Game', metric = 'Win Fraction'):
+def win_heatmap(plot_dict, games = None, category = 'Game', metric = 'Win Fraction', players = ['Sam', 'Gabi', 'Reagan', 'Adrian']):
 	if category == 'Game':
-		fig = plt.figure(figsize = (2,6))
+		fig = plt.figure(figsize = (2.5,6))
 	else:
-		fig = plt.figure(figsize = (2,6))
+		fig = plt.figure(figsize = (2.5,6))
 		
 	if metric == 'Win Fraction':
-		fraction = plot_dict[category].loc[games, ['Sam','Gabi','Reagan']]
+		fraction = plot_dict[category].loc[games, players]
 		cmap = 'Reds'
 		vmin = 0
 		vmax = 1
 		label = 'Win Fraction'
 	elif metric == 'Fraction Above Expected':
-		fraction = plot_dict[category].loc[games, ['Sam','Gabi','Reagan']]
+		fraction = plot_dict[category].loc[games, players]
 		cmap = 'coolwarm'
 		vmin = -1
 		vmax = 1
 		label = 'Fraction Above Expected'
 	elif metric == 'Fraction Above Random':
-		fraction = plot_dict[category].loc[games, ['Sam','Gabi','Reagan']]
+		fraction = plot_dict[category].loc[games, players]
 		cmap = 'coolwarm'
 		vmin = -1
 		vmax = 1
 		label = 'Fraction Above Expected'
-	sns.heatmap(fraction, cmap = cmap, vmin = vmin, vmax = vmax, cbar_kws = {'label': label})
+	g = sns.heatmap(fraction, cmap = cmap, vmin = vmin, vmax = vmax, cbar_kws = {'label': label})
+	g.set_facecolor('black')
 	return fig

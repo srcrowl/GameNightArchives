@@ -77,17 +77,33 @@ elif menu == 'Breaking Down By Games':
 
     #set plot type
     cols = st.columns([0.3,0.7])
+        #give option to choose specific players
+    cols[0].write('Select players to plot:')
+    sam = cols[0].checkbox('Sam', value = True)
+    gabi = cols[0].checkbox('Gabi', value = True)
+    reagan = cols[0].checkbox('Reagan', value = True)
+    adrian = cols[0].checkbox('Adrian', value = True)
+    players = []
+    if sam:
+        players.append('Sam')
+    if gabi:
+        players.append('Gabi')
+    if reagan:
+        players.append('Reagan')
+    if adrian:
+        players.append('Adrian')
+    #give option to choose plot type
     chart_type = cols[0].selectbox('Chart Type:', ['Bar', 'Heatmap'])
     category = cols[0].selectbox('Break down stats by:', ['Game','Format',"Game Length", "Team Size", "Primary Classification","Win Condition", "Luck Score", "Sam's Mechanisms", 'Owner', 'Location','Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'])
-    fraction = fraction_dict[category][['Sam', 'Gabi', 'Reagan', 'Adrian']]
+    fraction = fraction_dict[category][players]
     games_played = gplayed_dict_player[category]
-
+    #restrict to games played a certain number of times
     min_gplayed = cols[0].slider('Minimum Number of Times Played', min_value = 0, max_value = 50, value = 0)
-    games_played = games_played[games_played >= min_gplayed]
+    games_played = games_played[games_played.max(axis = 1) >= min_gplayed]
     fraction = fraction.loc[games_played.index]
         
     if chart_type == 'Bar':
-        fig = win_fraction_barplot(fraction, overall_fraction, games_played)
+        fig = win_fraction_barplot(fraction, overall_fraction, games_played, players = players)
 
     else:
         metric = st.radio('Metric:', ['Win Fraction', 'Fraction Above Expected'], horizontal = True)
@@ -97,7 +113,7 @@ elif menu == 'Breaking Down By Games':
             plot_dict = pae_dict
         elif metric == 'Fraction Above Random':
             plot_dict = par_dict
-        fig = win_heatmap(plot_dict, games = games_played.index, category = category, metric = metric)
+        fig = win_heatmap(plot_dict, games = games_played.index, category = category, metric = metric, players = players)
 
     cols[1].pyplot(fig)
 
@@ -127,7 +143,11 @@ else:
         elif track == 'Number of Wins' or track == 'Win Fraction' or track == 'Win Time':
             plot_data = full_data.copy()
             if track == 'Win Fraction':
-                gplayed_cumsum = plot_data.groupby('Date').size().cumsum()
+                gplayed_cumsum = plot_data.copy()
+                players = ['Sam', 'Gabi', 'Reagan', 'Adrian']
+                for player in players:
+                    gplayed_cumsum[player] = gplayed_cumsum['Players'].apply(lambda x: (player in x)*1)
+                gplayed_cumsum = gplayed_cumsum.groupby('Date')[players].sum().cumsum()
                 
             plot_data['Winner'] = plot_data['Winner'].apply(lambda x: x.split(';'))
             plot_data = plot_data.explode('Winner')
@@ -144,13 +164,13 @@ else:
                 elif track == 'Win Fraction':
                     legend = True
                     ylabel = 'Win Fraction'
-                    plot_data = (plot_data.T/gplayed_cumsum).T
+                    plot_data = plot_data/gplayed_cumsum
             elif track == 'Win Time':
                 plot_data = plot_data.groupby(['Winner', 'Date'])['Play Time (min)'].sum().reset_index()
                 plot_data = plot_data.pivot(columns = 'Winner', index = 'Date', values = 'Play Time (min)')
                 plot_data = plot_data.replace(np.nan, 0)
                 plot_data = plot_data.cumsum()
-                plot_data = plot_data[['Sam', 'Gabi', 'Reagan']]
+                plot_data = plot_data[['Sam', 'Gabi', 'Reagan', 'Adrian']]
                 legend = True
                 ylabel = 'Win Time (min)'
                 
