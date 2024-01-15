@@ -25,6 +25,7 @@ st.title(f'Game Night Statistics ({current_semester})')
 full_data = st.session_state['Full Data'][st.session_state['Full Data']['Semester'] == current_semester]
 scores_dict, gplayed_dict_overall, gplayed_dict_player, fraction_dict, pae_dict, par_dict = processResults(full_data)
 overall_fraction = scores_dict['Game'].sum()/gplayed_dict_player['Game'].sum()
+overall_fraction = overall_fraction.replace(np.nan, 0)
 
 #load data minus the last 15 games
 most_recent_date = full_data['Date'].unique()[:-1]
@@ -46,12 +47,21 @@ menu_data = [
     {'label': "Tracking Progress Over Time"}
 ]
 menu = hc.nav_bar(menu_definition = menu_data, sticky_nav = True, sticky_mode = 'pinned')
+players = ['Sam', 'Gabi', 'Reagan', 'Adrian']
 #Widget indicating win percentage
 if menu == 'Overall Stats':
     st.header('Number of Wins')
     current_wins = scores_dict['Game'].sum()
+    #make sure data is available for all players
+    for p in players:
+        if p not in current_wins.index:
+            current_wins[p] = 0
+
     if prev_data:
         past_wins = past_scores['Game'].sum()
+        for p in players:
+            if p not in past_wins.index:
+                past_wins[p] = 0
     else:
         past_wins = pd.Series([0,0,0,0], index = ['Sam', 'Gabi', 'Reagan', 'Adrian'])
 
@@ -95,7 +105,12 @@ elif menu == 'Breaking Down By Games':
     #give option to choose plot type
     chart_type = cols[0].selectbox('Chart Type:', ['Bar', 'Heatmap'])
     category = cols[0].selectbox('Break down stats by:', ['Game','Format',"Game Length", "Team Size", "Primary Classification","Win Condition", "Luck Score", "Sam's Mechanisms", 'Owner', 'Location','Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'])
-    fraction = fraction_dict[category][players]
+    #if data not available for all players, add them with 0 wins
+    fraction = fraction_dict[category]
+    for p in players:
+        if p not in fraction.columns:
+            fraction[p] = 0
+    
     games_played = gplayed_dict_player[category]
     #restrict to games played a certain number of times
     min_gplayed = cols[0].slider('Minimum Number of Times Played', min_value = 0, max_value = 50, value = 0)
@@ -157,6 +172,9 @@ else:
                 plot_data = plot_data.pivot(columns = 'Winner', index = 'Date', values = 'Wins')
                 plot_data = plot_data.replace(np.nan, 0)
                 plot_data = plot_data.cumsum()
+                for p in ['Sam', 'Gabi', 'Reagan', 'Adrian']:
+                    if p not in plot_data.columns:
+                        plot_data[p] = 0
                 plot_data = plot_data[['Sam', 'Gabi', 'Reagan', 'Adrian']]
                 if track == 'Number of Wins':
                     legend = True
@@ -170,6 +188,9 @@ else:
                 plot_data = plot_data.pivot(columns = 'Winner', index = 'Date', values = 'Play Time (min)')
                 plot_data = plot_data.replace(np.nan, 0)
                 plot_data = plot_data.cumsum()
+                for p in ['Sam', 'Gabi', 'Reagan', 'Adrian']:
+                    if p not in plot_data.columns:
+                        plot_data[p] = 0
                 plot_data = plot_data[['Sam', 'Gabi', 'Reagan', 'Adrian']]
                 legend = True
                 ylabel = 'Win Time (min)'
