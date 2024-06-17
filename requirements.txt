@@ -1,7 +1,9 @@
-matplotlib==3.6.2
-seaborn==0.12.2
-shillelagh==1.1.5
+numpy==1.26.*
+pandas==2.2.*
+matplotlib==3.8.*
+seaborn==0.13.*
+shillelagh==1.2.*
 shillelagh[gsheetsapi]
-scikit-learn
-hydralit-components
+scikit-learn==1.5.*
+hydralit-components==1.0.*
 
