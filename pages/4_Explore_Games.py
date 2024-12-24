@@ -27,11 +27,11 @@ type_to_explore = st.radio('Explore:', ['Game', 'Category'], horizontal = True)
 
 #add tabs
 if type_to_explore == 'Game':
-    unique_games = np.sort(st.session_state['Full Data']['Game Title'].unique())
+    unique_games = np.sort(st.session_state['Full Data']['Game'].unique())
     game_to_explore = st.selectbox('Pick a game to explore:', unique_games)
 
     game_data = st.session_state['Full Data'].copy()
-    game_data = game_data[game_data['Game Title'] == game_to_explore]
+    game_data = game_data[game_data['Game'] == game_to_explore]
     games_with_scores = game_data.dropna(subset = 'Scores')
     games_with_scores = pd.DataFrame(games_with_scores['Scores'].apply(lambda x: x.split(';')).explode()).reset_index()
     games_with_scores['Player'] = games_with_scores['Scores'].apply(lambda x: x.split('=')[0])
@@ -80,7 +80,7 @@ if type_to_explore == 'Game':
         st.header('Game Ratings')
         st.subheader('Board Game Geek')
         cols = st.columns(2)
-        game_data = st.session_state['Categories'][st.session_state['Categories']['Game Title'] == game_to_explore].squeeze()
+        game_data = st.session_state['Categories'][st.session_state['Categories']['Game'] == game_to_explore].squeeze()
         cols[0].metric('BGG Rating', game_data['BGG Rating'], delta = None)
         cols[1].metric('BGG Complexity (Out of 5)', game_data['BGG Weight'], delta = None)
 
@@ -130,37 +130,37 @@ if type_to_explore == 'Game':
     if menu == 'Game Classifications':
         st.header('How the game is classified')
 
-        st.markdown(f"**Person who owns the game:** {st.session_state['Owner'].loc[st.session_state['Owner']['Game Title'] == game_to_explore, 'Owner'].values[0]}")
+        st.markdown(f"**Person who owns the game:** {st.session_state['Owner'].loc[st.session_state['Owner']['Game'] == game_to_explore, 'Owner'].values[0]}")
 
-        game_format = ', '.join(st.session_state['Format'].loc[st.session_state['Format']['Game Title'] == game_to_explore, 'Format'].values)
+        game_format = ', '.join(st.session_state['Format'].loc[st.session_state['Format']['Game'] == game_to_explore, 'Format'].values)
         st.markdown(f"**Game Format:** {game_format}")
 
-        st.markdown(f"**Size of the teams:** {st.session_state['Team Size'].loc[st.session_state['Team Size']['Game Title'] == game_to_explore, 'Team Size'].values[0]}")
+        st.markdown(f"**Size of the teams:** {st.session_state['Team Size'].loc[st.session_state['Team Size']['Game'] == game_to_explore, 'Team Size'].values[0]}")
 
-        primary_class = st.session_state['Primary Classification'].loc[st.session_state['Primary Classification']['Game Title'] == game_to_explore, 'Primary Classification']
+        primary_class = st.session_state['Primary Classification'].loc[st.session_state['Primary Classification']['Game'] == game_to_explore, 'Primary Classification']
         if primary_class.shape[0] > 0:
             st.markdown(f"**Primary Classification:** {primary_class.values[0]}")
 
-        st.markdown(f"**Average game length:** {st.session_state['Game Length'].loc[st.session_state['Game Length']['Game Title'] == game_to_explore, 'Game Length'].values[0]}")
+        st.markdown(f"**Average game length:** {st.session_state['Game Length'].loc[st.session_state['Game Length']['Game'] == game_to_explore, 'Game Length'].values[0]}")
 
-        win_condition = ', '.join(st.session_state["Win Condition"].loc[st.session_state["Win Condition"]["Game Title"] == game_to_explore, "Win Condition"].values)
+        win_condition = ', '.join(st.session_state["Win Condition"].loc[st.session_state["Win Condition"]["Game"] == game_to_explore, "Win Condition"].values)
         st.markdown(f"**Win Condition:** {win_condition}")
 
-        st.markdown(f"**Luck Score (1 = No Luck, 5 = All Luck):** {st.session_state['Luck Score'].loc[st.session_state['Luck Score']['Game Title'] == game_to_explore, 'Luck Score'].values[0]}")
+        st.markdown(f"**Luck Score (1 = No Luck, 5 = All Luck):** {st.session_state['Luck Score'].loc[st.session_state['Luck Score']['Game'] == game_to_explore, 'Luck Score'].values[0]}")
 
-        game_type = ', '.join(st.session_state["Sam's Mechanisms"].loc[st.session_state["Sam's Mechanisms"]["Game Title"] == game_to_explore, "Sam's Mechanisms"].values)
+        game_type = ', '.join(st.session_state["Sam's Mechanisms"].loc[st.session_state["Sam's Mechanisms"]["Game"] == game_to_explore, "Sam's Mechanisms"].values)
         st.markdown(f"**Game Type(s):** {game_type}")
 
-        game_themes = ', '.join(st.session_state['Theme'].loc[st.session_state['Theme']['Game Title'] == game_to_explore, 'Theme'].values)
+        game_themes = ', '.join(st.session_state['Theme'].loc[st.session_state['Theme']['Game'] == game_to_explore, 'Theme'].values)
         st.markdown(f"**Game Theme(s):** {game_themes}")
 
-        bgg_type = ', '.join(st.session_state['BGG Type'].loc[st.session_state['BGG Type']['Game Title'] == game_to_explore, 'BGG Type'].values)
+        bgg_type = ', '.join(st.session_state['BGG Type'].loc[st.session_state['BGG Type']['Game'] == game_to_explore, 'BGG Type'].values)
         st.markdown(f"**Board Game Geek Type(s):** {game_themes}")
 
-        bgg_cat = ', '.join(st.session_state['BGG Category'].loc[st.session_state['BGG Category']['Game Title'] == game_to_explore, 'BGG Category'].values)
+        bgg_cat = ', '.join(st.session_state['BGG Category'].loc[st.session_state['BGG Category']['Game'] == game_to_explore, 'BGG Category'].values)
         st.markdown(f"**Board Game Geek Categories:** {bgg_cat}")
 
-        bgg_mech = ', '.join(st.session_state['BGG Mechanism'].loc[st.session_state['BGG Mechanism']['Game Title'] == game_to_explore, 'BGG Mechanism'].values)
+        bgg_mech = ', '.join(st.session_state['BGG Mechanism'].loc[st.session_state['BGG Mechanism']['Game'] == game_to_explore, 'BGG Mechanism'].values)
         st.markdown(f"**Board Game Geek Mechanism(s):** {bgg_mech}")
 else:
     st.write('Work in progress')
@@ -179,7 +179,7 @@ else:
     menu = hc.nav_bar(menu_definition = menu_data, sticky_nav = True, sticky_mode = 'pinned')
     if menu == 'Summary Statistics':
         game_data = st.session_state['Full Data'].copy()
-        game_data = game_data.merge(category_data, on = 'Game Title')
+        game_data = game_data.merge(category_data, on = 'Game')
         scores_dict, gplayed_dict, gplayed_dict_player, fraction_dict, pae_dict, par_dict = processResults(game_data)
         scores = scores_dict['Game']
         if 'Lionel' in scores.columns:
@@ -211,7 +211,7 @@ else:
 
             #plots
             fig = plt.figure()
-            sns.barplot(x = 'Game Title', y = 'value', hue = 'Winner', data = scores)
+            sns.barplot(x = 'Game', y = 'value', hue = 'Winner', data = scores)
             plt.xticks(rotation = 90)
             plt.legend(ncols = 3)
             plt.ylabel('Number of Wins')
@@ -230,7 +230,7 @@ else:
 
         st.subheader('Our Ratings')
         ratings = st.session_state['Ratings'].copy()
-        games_with_ratings = [game for game in category_data['Game Title'].unique() if game in ratings.index]
+        games_with_ratings = [game for game in category_data['Game'].unique() if game in ratings.index]
         ratings = ratings.loc[games_with_ratings].mean()
         st.metric('Consensus', round(ratings.mean(), 2), delta = None)
         cols = st.columns(3)
@@ -240,4 +240,4 @@ else:
 
     elif menu == 'Games in Category':
         #st.header('Games in Category')
-        st.write(', '.join(np.sort(category_data['Game Title'].unique())))
+        st.write(', '.join(np.sort(category_data['Game'].unique())))

@@ -1,25 +1,37 @@
 import pandas as pd 
 import numpy as np
 import streamlit as st
-from shillelagh.backends.apsw.db import connect
+import gspread
+#from shillelagh.backends.apsw.db import connect
+
+#@st.cache_data(ttl = 600)
+#def runQuery(sheets_link):
+#    connection = connect(":memory:", adapters = 'gsheetsapi')
+#    cursor = connection.cursor()
+    
+#    query = f'SELECT * FROM "{sheets_link}"'
+
+#    query_results = []
+#    for row in cursor.execute(query):
+#        query_results.append(row)
+#    return query_results
 
 @st.cache_data(ttl = 600)
-def runQuery(sheets_link):
-    connection = connect(":memory:", adapters = 'gsheetsapi')
-    cursor = connection.cursor()
-    
-    query = f'SELECT * FROM "{sheets_link}"'
+def runQuery(api_key, sheets_key, sheet_name = 'Sheet1'):
+    gc = gspread.api_key(api_key)
+    sh = gc.open_by_key(sheets_key)
+    results = pd.DataFrame(sh.worksheet(sheet_name).get_all_records())
+    return results
 
-    query_results = []
-    for row in cursor.execute(query):
-        query_results.append(row)
-    return query_results
+#def loadData_results():
+#    sheets_query = runQuery(st.secrets['results_url'])
+#    results = pd.DataFrame(sheets_query, columns = ['Date', 'Semester', 'Game', 'Winner', 'Play Time (min)', 'Scores', #'Game-specific Notes', 'Location', 'First Player', 'Players'])
+#    return results
 
 def loadData_results():
-    sheets_query = runQuery(st.secrets['results_url'])
-    results = pd.DataFrame(sheets_query, columns = ['Date', 'Semester', 'Game Title', 'Winner', 'Play Time (min)', 'Scores', 'Game-specific Notes', 'Location', 'First Player', 'Players'])
+    results = runQuery(st.secrets['api_key'], st.secrets['results_key'], sheet_name = 'Sheet1')
     return results
-    
+
 def processCategories(data, category_type = 'Game Type'):
     data = data.dropna(subset = category_type).copy()
     if data[category_type].dtypes != str:
@@ -27,20 +39,23 @@ def processCategories(data, category_type = 'Game Type'):
     data[category_type] = data[category_type].apply(lambda x: x.split(','))
     data = data.explode(category_type)
     data[category_type] = data[category_type].apply(lambda x: x.strip(' '))
+    data = data.rename(columns = {'Game Title': 'Game'})
     return data
     
     
 def loadData_categories():
     #read in categories spreadsheet
-    sheets_query = runQuery(st.secrets['category_url'])
-    results = pd.DataFrame(sheets_query, columns = ['Data of Entry', 'Game Title', 'Owner', 'Format', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism', 'BGG Rating', 'BGG Weight', 'Primary Classification', 'Team Size', 'Game Length', 'Win Condition', 'Luck Score'])
+    #sheets_query = runQuery(st.secrets['category_url'])
+    #results = pd.DataFrame(sheets_query, columns = ['Data of Entry', 'Game', 'Owner', 'Format', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism', 'BGG Rating', 'BGG Weight', 'Primary Classification', 'Team Size', 'Game Length', 'Win Condition', 'Luck Score'])
+    results = runQuery(st.secrets['api_key'], st.secrets['category_key'], sheet_name = 'Form Responses 1')
+
     st.session_state['Categories'] = results.copy()
     
     #establish owner dataframe
-    st.session_state['Owner'] = results[['Game Title', 'Owner']]
+    st.session_state['Owner'] = results[['Game Title', 'Game Owner']].rename(columns = {'Game Title': 'Game', 'Game Owner': 'Owner'})
     
     #establish format dataframe
-    col = 'Format'
+    col = 'Game Format'
     st.session_state['Format'] = processCategories(results[['Game Title', col]], col)
     
         #establish format dataframe
@@ -48,11 +63,11 @@ def loadData_categories():
     st.session_state['Primary Classification'] = processCategories(results[['Game Title', col]], col)
     
             #establish length dataframe
-    col = 'Game Length'
+    col = 'Average Game Time'
     st.session_state[col] = processCategories(results[['Game Title', col]], col)
     
                 #establish length dataframe
-    col = 'Team Size'
+    col = 'Group'
     st.session_state[col] = processCategories(results[['Game Title', col]], col)
     
     #establish type dataframe
@@ -60,7 +75,7 @@ def loadData_categories():
     st.session_state[col] = processCategories(results[['Game Title', col]],col)
     
     #establish theme dataframe
-    col = 'Theme'
+    col = 'Themes'
     st.session_state[col] = processCategories(results[['Game Title', col]],col)
     
     #establish BGG mechanism dataframe
@@ -68,7 +83,7 @@ def loadData_categories():
     st.session_state[col] = processCategories(results[['Game Title', col]],col)
     
     #establish BGG mechanism dataframe
-    col = 'Luck Score'
+    col = 'Luck Scale'
     st.session_state[col] = processCategories(results[['Game Title', col]],col)
     
     
@@ -87,25 +102,27 @@ def loadData_categories():
 
 def loadData_ratings():
     #read in ratings
-    sheets_query = runQuery(st.secrets['ratings_url'])
-    columns = ['Date of Entry', 'Name','Rummikub', 'Trial by Trolley','Sequence', 'Galaxy Trucker', 'Rat-a-tat Cat', 'Quacks of Quedlinberg', 'Uno', 'Phase 10', 'Goat Lords', 'Taboo', 'Qwixx', 'Smart Ass', 'Anomia', 'Spades', 'President', 'ERS', 'Love Letter', 'Codenames', 'Peptide', 'Hangry', "That's Pretty Clever", '5 Second Rule', 'Exploding Kittens', 'Llamas Unleashed', 'Carcassonne', 'Uno Flip', 'Bananagrams', 'Betrayal at the House on the Hill', 'Blokus', 'Azul', 'Calico', 'Unearth', 'Hearts', 'Dominion', 'Happy Little Dinosaurs', 'Balderdash', 'Pictionary', 'Sushi Go Dice', 'Fairy Tale', 'Settlers of Catan', '5 Alive', 'Poetry for Neanderthals', 'Least count', "Kings in the Corner", 'Infinity Gauntlet', 'Ten', 'Silver and Gold', 'King of Tokyo', 'Five Crowns', 'Long Shot', 'Bloom', 'Forbidden Desert', 'The Initiative', 'Horrified', 'Hanabi', 'Arkham Horror', 'Mysterium', 'Control', 'Coup', 'Jenga', 'Towers of Arkhanos', 'Dune', 'The Crew: Quest for Planet Nine', 'Superfight', 'Happy Salmon', 'Hand-to-Hand Wombat',
-    'The Search for Planet X', 'Doomlings', 'Sagrada', 'Take 5', 'Sushi Go!', 'Gloomhaven: Jaws of the Lion', 'Dixit', 'Nova Luna', 'Railroad Ink', 'Isle of Cats', 'Akropolis', 'SkyJo', 'Arboretum', 'SCOUT', 'Cat in the Box', 'Earth', 'Celestia','Spires','Clever 4Ever', 'Welcome to the Moon', 'Decrypto', 'Citadels']
-    results = pd.DataFrame(sheets_query, columns = columns)
-    results = results.sort_values(by = 'Date of Entry', ascending = False)
+    #sheets_query = runQuery(st.secrets['ratings_url'])
+    #columns = ['Date of Entry', 'Name','Rummikub', 'Trial by Trolley','Sequence', 'Galaxy Trucker', 'Rat-a-tat Cat', 'Quacks of Quedlinberg', 'Uno', 'Phase 10', 'Goat Lords', 'Taboo', 'Qwixx', 'Smart Ass', 'Anomia', 'Spades', 'President', 'ERS', 'Love Letter', 'Codenames', 'Peptide', 'Hangry', "That's Pretty Clever", '5 Second Rule', 'Exploding Kittens', 'Llamas Unleashed', 'Carcassonne', 'Uno Flip', 'Bananagrams', 'Betrayal at the House on the Hill', 'Blokus', 'Azul', 'Calico', 'Unearth', 'Hearts', 'Dominion', 'Happy Little Dinosaurs', 'Balderdash', 'Pictionary', 'Sushi Go Dice', 'Fairy Tale', 'Settlers of Catan', '5 Alive', 'Poetry for Neanderthals', 'Least count', "Kings in the Corner", 'Infinity Gauntlet', 'Ten', 'Silver and Gold', 'King of Tokyo', 'Five Crowns', 'Long Shot', 'Bloom', 'Forbidden Desert', 'The Initiative', 'Horrified', 'Hanabi', 'Arkham Horror', 'Mysterium', 'Control', 'Coup', 'Jenga', 'Towers of Arkhanos', 'Dune', 'The Crew: Quest for Planet Nine', 'Superfight', 'Happy Salmon', 'Hand-to-Hand Wombat','The Search for Planet X', 'Doomlings', 'Sagrada', 'Take 5', 'Sushi Go!', 'Gloomhaven: Jaws of the Lion', 'Dixit', 'Nova Luna', 'Railroad Ink', 'Isle of Cats', 'Akropolis', 'SkyJo', 'Arboretum', 'SCOUT', 'Cat in the Box', 'Earth', 'Celestia','Spires','Clever 4Ever', 'Welcome to the Moon', 'Decrypto', 'Citadels']
+    #results = pd.DataFrame(sheets_query, columns = columns)
+    results = runQuery(st.secrets['api_key'], st.secrets['ratings_key'], sheet_name = 'Form Responses 1')
+    results = results.sort_values(by = 'Timestamp', ascending = False)
     results_trim = []
     for name in results['Name'].unique():
         results_trim.append(results[results['Name'] == name].iloc[0])
     results_trim = pd.concat(results_trim, axis = 1)
     results_trim.columns = results_trim.loc['Name']
-    results_trim = results_trim.drop(['Date of Entry','Name'])
+    results_trim = results_trim.drop(['Timestamp','Name'])
     return results_trim
 
 def loadData_trivia():
     #read in ratings
-    sheets_query = runQuery(st.secrets['trivia_url'])
-    columns = ['Date of Entry', 'Trivia Date', 'Semester', 'Players', 'Number of Teams', 'Current Events: Topic', 'Current Events: Score', 'Music Round: Topic', 'Music Round: Score', 'Pop culture: Topic', 'Pop culture: Score', '3rd Place Pick: Topic', '3rd Place Pick: Score', 'Random Knowledge: Score', 'List Topic', 'List Score', 'Place']
-    results = pd.DataFrame(sheets_query, columns = columns)
-    results = results.sort_values(by = 'Date of Entry', ascending = True)
+    #sheets_query = runQuery(st.secrets['trivia_url'])
+    #columns = ['Date of Entry', 'Trivia Date', 'Semester', 'Players', 'Number of Teams', 'Current Events: Topic', 'Current Events: Score', 'Music Round: Topic', 'Music Round: Score', 'Pop culture: Topic', 'Pop culture: Score', '3rd Place Pick: Topic', '3rd Place Pick: Score', 'Random Knowledge: Score', 'List Topic', 'List Score', 'Place']
+    #results = pd.DataFrame(sheets_query, columns = columns)
+
+    results = runQuery(st.secrets['api_key'], st.secrets['trivia_key'], sheet_name='Form Responses 1')
+    results = results.sort_values(by = 'Timestamp', ascending = True)
     return results
 
 def processResults(data, overall_only = False):
@@ -117,16 +134,16 @@ def processResults(data, overall_only = False):
     par_dict = {}
     tmp_data = data.copy()
     #games played
-    games_played_overall = tmp_data.groupby('Game Title').size()
+    games_played_overall = tmp_data.groupby('Game').size()
     games_played_overall = games_played_overall.astype(int)
     games_played_overall.name = 'Number of Plays'
     #separate out players
     tmp_data['Players'] = tmp_data['Players'].apply(lambda x: x.split(';'))
     tmp_data = tmp_data.explode('Players')
-    games_played_player = tmp_data.groupby(['Players', 'Game Title']).size()
+    games_played_player = tmp_data.groupby(['Players', 'Game']).size()
     games_played_player = games_played_player.astype(int)
     games_played_player.name = 'Number of Plays'
-    games_played_player = games_played_player.reset_index().pivot(columns = 'Players', index = 'Game Title', values = 'Number of Plays')
+    games_played_player = games_played_player.reset_index().pivot(columns = 'Players', index = 'Game', values = 'Number of Plays')
     games_played_player = games_played_player.replace(np.nan, 0)
     #explode dataframe to separate winners when there were multiple
     tmp_data['Winner'] = tmp_data['Winner'].apply(lambda x: x.split(';'))
@@ -134,8 +151,8 @@ def processResults(data, overall_only = False):
     #get rid of rows where winner does not match player
     tmp_data = tmp_data[tmp_data['Players'] == tmp_data['Winner']]
     #count the number of wins for each game and each player
-    overall_scores = tmp_data.groupby(['Game Title', 'Winner']).size().reset_index()
-    overall_scores = overall_scores.pivot(columns = 'Winner', index = 'Game Title', values = 0)
+    overall_scores = tmp_data.groupby(['Game', 'Winner']).size().reset_index()
+    overall_scores = overall_scores.pivot(columns = 'Winner', index = 'Game', values = 0)
     overall_scores = overall_scores.replace(np.nan, 0)
     #get overall win fraction for each player
     overall_fraction = overall_scores.sum()/games_played_player.sum()
@@ -151,16 +168,16 @@ def processResults(data, overall_only = False):
         scores_dict['Owner'], gplayed_overall_dict['Owner'], gplayed_player_dict['Owner'], fraction_dict['Owner'], pae_dict['Owner'], par_dict['Owner'] = getDictionaries('Owner', 'Owner', overall_scores, games_played_overall, games_played_player, overall_fraction)
         
         #get format specific results
-        scores_dict['Format'], gplayed_overall_dict['Format'], gplayed_player_dict['Format'], fraction_dict['Format'], pae_dict['Format'], par_dict['Format'] = getDictionaries('Format', 'Format', overall_scores, games_played_overall, games_played_player, overall_fraction)
+        scores_dict['Format'], gplayed_overall_dict['Format'], gplayed_player_dict['Format'], fraction_dict['Format'], pae_dict['Format'], par_dict['Format'] = getDictionaries('Format', 'Game Format', overall_scores, games_played_overall, games_played_player, overall_fraction)
         
                 #get primary classification specific results
         scores_dict['Primary Classification'], gplayed_overall_dict['Primary Classification'], gplayed_player_dict['Primary Classification'], fraction_dict['Primary Classification'], pae_dict['Primary Classification'], par_dict['Primary Classification'] = getDictionaries('Primary Classification', 'Primary Classification', overall_scores, games_played_overall, games_played_player, overall_fraction)
         
                         #get primary classification specific results
-        scores_dict['Game Length'], gplayed_overall_dict['Game Length'], gplayed_player_dict['Game Length'], fraction_dict['Game Length'], pae_dict['Game Length'], par_dict['Game Length'] = getDictionaries('Game Length', 'Game Length', overall_scores, games_played_overall, games_played_player, overall_fraction)
+        scores_dict['Game Length'], gplayed_overall_dict['Game Length'], gplayed_player_dict['Game Length'], fraction_dict['Game Length'], pae_dict['Game Length'], par_dict['Game Length'] = getDictionaries('Average Game Time', 'Average Game Time', overall_scores, games_played_overall, games_played_player, overall_fraction)
         
         #get team size specific results
-        scores_dict['Team Size'], gplayed_overall_dict['Team Size'], gplayed_player_dict['Team Size'], fraction_dict['Team Size'], pae_dict['Team Size'], par_dict['Team Size'] = getDictionaries('Team Size', 'Team Size', overall_scores, games_played_overall, games_played_player, overall_fraction)
+        scores_dict['Team Size'], gplayed_overall_dict['Team Size'], gplayed_player_dict['Team Size'], fraction_dict['Team Size'], pae_dict['Team Size'], par_dict['Team Size'] = getDictionaries('Group', 'Group', overall_scores, games_played_overall, games_played_player, overall_fraction)
         
         #get type specific results
         scores_dict["Sam's Mechanisms"], gplayed_overall_dict["Sam's Mechanisms"], gplayed_player_dict["Sam's Mechanisms"],fraction_dict["Sam's Mechanisms"], pae_dict["Sam's Mechanisms"], par_dict["Sam's Mechanisms"] = getDictionaries("Sam's Mechanisms", "Sam's Mechanisms", overall_scores, games_played_overall, games_played_player, overall_fraction)
@@ -171,10 +188,10 @@ def processResults(data, overall_only = False):
         
                         
         #get luck score specific results
-        scores_dict["Luck Score"], gplayed_overall_dict['Luck Score'], gplayed_player_dict['Luck Score'], fraction_dict["Luck Score"], pae_dict["Luck Score"], par_dict['Luck Score'] = getDictionaries("Luck Score", "Luck Score", overall_scores, games_played_overall, games_played_player, overall_fraction)
+        scores_dict["Luck Score"], gplayed_overall_dict['Luck Score'], gplayed_player_dict['Luck Score'], fraction_dict["Luck Score"], pae_dict["Luck Score"], par_dict['Luck Score'] = getDictionaries("Luck Scale", "Luck Scale", overall_scores, games_played_overall, games_played_player, overall_fraction)
         
         #get theme specific results
-        scores_dict['Theme'], gplayed_overall_dict['Theme'], gplayed_player_dict['Them'], fraction_dict['Theme'], pae_dict['Theme'], par_dict['Theme'] = getDictionaries('Theme', 'Theme', overall_scores, games_played_overall, games_played_player, overall_fraction)
+        scores_dict['Theme'], gplayed_overall_dict['Theme'], gplayed_player_dict['Theme'], fraction_dict['Theme'], pae_dict['Theme'], par_dict['Theme'] = getDictionaries('Themes', 'Themes', overall_scores, games_played_overall, games_played_player, overall_fraction)
         
         #get BGG type
         scores_dict['BGG Type'], gplayed_overall_dict['BGG Type'], gplayed_player_dict['BGG Type'], fraction_dict['BGG Type'], pae_dict['BGG Type'], par_dict['BGG Type'] = getDictionaries('BGG Type', 'BGG Type', overall_scores, games_played_overall, games_played_player, overall_fraction)
@@ -208,10 +225,10 @@ def processResults(data, overall_only = False):
     
     
 def getDictionaries(key, col, overall_scores, games_played_overall, games_played_player, overall_fraction):
-    scores = st.session_state[key].merge(overall_scores, on = 'Game Title').groupby(col).sum(numeric_only = True)
-    #scores = scores.drop('Game Title', axis = 1)
-    gplayed_overall = st.session_state[key].merge(games_played_overall, left_on = 'Game Title', right_index = True).groupby(col).sum()
-    gplayed_player = st.session_state[key].merge(games_played_player, on = 'Game Title').groupby(col).sum(numeric_only = True)
+    scores = st.session_state[key].merge(overall_scores, left_on = 'Game', right_index = True).groupby(col).sum(numeric_only = True)
+    #scores = scores.drop('Game', axis = 1)
+    gplayed_overall = st.session_state[key].merge(games_played_overall, left_on = 'Game', right_index = True).groupby(col).sum()
+    gplayed_player = st.session_state[key].merge(games_played_player, on = 'Game').groupby(col).sum(numeric_only = True)
     fraction = getFraction(scores, gplayed_player)
     pae = getPercentageAboveExpected(fraction, overall_fraction)
     par = getPercentageAboveRandom(fraction)

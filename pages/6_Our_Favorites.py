@@ -17,7 +17,7 @@ if 'Type' not in st.session_state:
 if 'Rating' not in st.session_state:
     st.session_state['Ratings'] = loadData_ratings()
 
-@st.cache(ttl = 600)
+@st.cache_data(ttl = 600)
 def plotAlphaChange(x, y, alpha = None):
     coefs = []
     fig,ax = plt.subplots(nrows = 3, sharex = True)
@@ -50,7 +50,7 @@ def plotAlphaChange(x, y, alpha = None):
     #ax[2].set_title('Cross-Validation Error')
     return fig
     
-@st.cache(ttl = 600)
+@st.cache_data(ttl = 600)
 def generateGroupings(use_list):
     groupings = []
     if use_list[0]:
@@ -116,7 +116,7 @@ def generateGroupings(use_list):
     groupings = pd.concat(groupings)
     return groupings
     
-@st.cache(ttl = 600)
+@st.cache_data(ttl = 600)
 def constructInputs(groupings, ratings):
     #construct x
     x = None
@@ -124,10 +124,10 @@ def constructInputs(groupings, ratings):
         #construct x
         if x is None:
             x = pd.DataFrame(data = 0, index = groupings['Category'].unique(), columns = [game])
-            game_cats = groupings.loc[groupings['Game Title'] == game, 'Category']
+            game_cats = groupings.loc[groupings['Game'] == game, 'Category']
             x.loc[game_cats] = 1
         else:
-            game_cats = groupings.loc[groupings['Game Title'] == game, 'Category']
+            game_cats = groupings.loc[groupings['Game'] == game, 'Category']
             x[game] = 0
             x.loc[game_cats, game] = 1
                 
@@ -143,7 +143,7 @@ scores_dict, gplayed_dict, gplayed_dict_player, fraction_dict, pae_dict, par_dic
 overall_fraction = scores_dict['Game'].sum()/gplayed_dict['Game'].sum()
 ratings = st.session_state['Ratings'].copy()
 if gamenight_only:
-    games_played = list(st.session_state['Full Data']['Game Title'].unique()) + coop_games
+    games_played = list(st.session_state['Full Data']['Game'].unique()) + coop_games
     ratings = ratings.loc[games_played]
 if allrated_only:
     ratings = ratings.dropna()
@@ -192,7 +192,7 @@ if menu == 'Favorites':
 
     #rank by category
     #group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Team Size', 'Game Length', 'Primary Classification', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'favorite_select')
-    consensus_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index')
+    consensus_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game', left_on = 'index')
     consensus_grouped = consensus_grouped[['Rating',group]].groupby(group)
     group_sizes = consensus_grouped.size()
     #min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'all_most') 
@@ -229,7 +229,7 @@ if menu == 'Least Favorites':
 
     #rank by category
     #group = cols[1].selectbox('Game Grouping (Min 2 Games):', ['Owner', 'Format', 'Team Size', 'Game Length', 'Primary Classification', "Sam's Mechanisms", 'Theme', 'BGG Type', 'BGG Category', 'BGG Mechanism'], key = 'Least Favorite')
-    consensus_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game Title', left_on = 'index')
+    consensus_grouped = y.reset_index().merge(st.session_state[group], right_on = 'Game', left_on = 'index')
     consensus_grouped = consensus_grouped[['Rating',group]].groupby(group)
     group_sizes = consensus_grouped.size()
     #min_games = cols[1].slider('Minimum number of Games Required for Inclusion', min_value = 1, max_value = 5, value = 2, key = 'all_most2') 
@@ -353,7 +353,7 @@ if player != 'All':
 #win = []
 #loss = []
 #for i, res in data.iterrows():
-#    game_title = res['Game Title']
+#    game_title = res['Game']
 #    if game_title in ratings.index:
 #        game_winner = res['Winner']
 #        if game_winner == player:
@@ -369,9 +369,9 @@ if player != 'All':
 #cols[1].pyplot(fig)
 
 
-#x = st.session_state['Categories'][['Game Title', 'BGG Weight']]
-#x.index = x['Game Title']
-#x = x.drop('Game Title', axis = 1)
+#x = st.session_state['Categories'][['Game', 'BGG Weight']]
+#x.index = x['Game']
+#x = x.drop('Game', axis = 1)
 #y = st.session_state['Ratings'][player]
 #shared_info = list(set(x.index).intersection(y.index))
 #x = x.loc[shared_info]

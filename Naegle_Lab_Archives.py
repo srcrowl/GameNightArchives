@@ -17,23 +17,23 @@ if 'Rating' not in st.session_state:
     st.session_state['Ratings'] = loadData_ratings()
     
 number_of_games = st.session_state['Full Data'].shape[0]
-number_of_unique_games = st.session_state['Full Data']['Game Title'].nunique()
+number_of_unique_games = st.session_state['Full Data']['Game'].nunique()
 time_spent = st.session_state['Full Data']['Play Time (min)'].sum()
 
 st.header('Our Most Played Games!')
 
 #get the most played games by time
-games_played_by_time = st.session_state['Full Data'].groupby('Game Title')['Play Time (min)'].sum().sort_values(ascending = False)
+games_played_by_time = st.session_state['Full Data'].groupby('Game')['Play Time (min)'].sum().sort_values(ascending = False)
 
 st.write(f' We have played a total of {number_of_games} games over the course of {round(time_spent/60,2)} hours. Across these games, we have played {number_of_unique_games} different games. Here are some of our most played:')
 metric = st.selectbox('By:', ['Time','Number of Plays'])
 if metric == 'Time':
-    games_played_by_total = st.session_state['Full Data'].groupby('Game Title')['Play Time (min)'].sum().sort_values(ascending = False)
-    games_played_by_recent = st.session_state['Full Data'].iloc[-50:].groupby('Game Title')['Play Time (min)'].sum().sort_values(ascending = False)
+    games_played_by_total = st.session_state['Full Data'].groupby('Game')['Play Time (min)'].sum().sort_values(ascending = False)
+    games_played_by_recent = st.session_state['Full Data'].iloc[-50:].groupby('Game')['Play Time (min)'].sum().sort_values(ascending = False)
     unit = 'minutes'
 else:
-    games_played_by_total = st.session_state['Full Data'].groupby('Game Title').size().sort_values(ascending = False)
-    games_played_by_recent = st.session_state['Full Data'].iloc[-50:].groupby('Game Title').size().sort_values(ascending = False)
+    games_played_by_total = st.session_state['Full Data'].groupby('Game').size().sort_values(ascending = False)
+    games_played_by_recent = st.session_state['Full Data'].iloc[-50:].groupby('Game').size().sort_values(ascending = False)
     unit = 'times played'
 cols = st.columns(2)
 #All time

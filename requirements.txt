@@ -2,8 +2,9 @@ numpy==1.26.*
 pandas==2.2.*
 matplotlib==3.8.*
 seaborn==0.13.*
-shillelagh==1.2.*
-shillelagh[gsheetsapi]
+#shillelagh==1.2.*
+#shillelagh[gsheetsapi]==1.2.*
 scikit-learn==1.5.*
 hydralit-components==1.0.*
+gspread=6.1.*
 
